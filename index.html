@@ -33,7 +33,7 @@
 
     <script>
         const SUPABASE_URL = "https://jfsaccbtbvuglvlgagus.supabase.co"; 
-        const SUPABASE_KEY = "sb_publishable_XU8l4rpJsFPlaHj3cny84Q_v53odH1k"; // 키 반영 완료!
+        const SUPABASE_KEY = "sb_publishable_XU8l4rpJsFPlaHj3cny84Q_v53odH1k"; 
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -99,10 +99,11 @@
                     alert('로그인 실패: ' + error.message);
                 } else {
                     const user = data.user;
+                    // 안전장치: 로컬스토리지와 서버 세션이 어긋나지 않게 확실하게 박아줍니다.
                     localStorage.setItem('reasn_user_name', user.user_metadata.display_name);
                     localStorage.setItem('reasn_user_role', user.user_metadata.role);
                     
-                    alert(user.user_metadata.display_name + '님 환영합니다! (등급: ' + user.user_metadata.role + ')');
+                    alert(user.user_metadata.display_name + '님 환영합니다!');
                     window.location.href = 'board.html';
                 }
             }

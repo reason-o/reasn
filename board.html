@@ -68,19 +68,137 @@
 
         var currentCategory = '자유주제';
         
-        let myName = '미확인 회원';
-        let myRole = 'USER';
+        // 1차로 로컬스토리지 기억을 먼저 가져와서 로딩 렉을 방지합니다.
+        let myName = localStorage.getItem('reasn_user_name') || '미확인 회원';
+        let myRole = localStorage.getItem('reasn_user_role') || 'USER';
 
-        // ⚡ 페이지가 켜질 때 로그인 상태를 체크하는 핵심 마법
         window.onload = async function() {
-            // Supabase에게 브라우저에 저장된 로그인 증명서가 있는지 물어봅니다.
-            const { data: { session }, error } = await supabaseClient.auth.getSession();
+            // 일단 먼저 화면에 이름을 띄워 멈추는 현상을 막습니다.
+            document.getElementById('userText').innerText = myName + "님 (" + myRole + ")";
+            displayPosts();
 
-            if (session && session.user) {
-                // 증명서가 있다면 최신 회원 정보(닉네임, 권한)를 실시간으로 땡겨와서 적용합니다.
-                const user = session.user;
-                myName = user.user_metadata.display_name || '이름없음';
-                myRole = user.user_metadata.role || 'USER';
-                
-                // 로컬 스토리지 데이터도 최신으로 갱신해 둡니다.
-                localStorage.
+            // 그 후 백그라운드에서 진짜 실시간 서버 세션을 체크하여 권한을 교차 검증합니다.
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session && session.user) {
+                    const user = session.user;
+                    myName = user.user_metadata.display_name || myName;
+                    myRole = user.user_metadata.role || myRole;
+                    
+                    localStorage.setItem('reasn_user_name', myName);
+                    localStorage.setItem('reasn_user_role', myRole);
+
+                    document.getElementById('userText').innerText = myName + "님 (" + myRole + ")";
+                }
+            } catch (e) {
+                console.log("세션 체크 건너뜀 (로컬 데이터 사용)");
+            }
+        }
+
+        function changeCategory(categoryName) {
+            currentCategory = categoryName;
+            var buttons = document.querySelectorAll('.category-btn');
+            buttons.forEach(btn => {
+                if(btn.innerText.includes(categoryName)) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+            displayPosts();
+        }
+
+        async function savePost() {
+            var input = document.getElementById('box');
+            var text = input.value.trim();
+            if (text === '') return alert('내용을 입력해주세요!');
+
+            let displayAuthor = myName;
+            
+            if (myRole === 'ADMIN') {
+                displayAuthor = '관리자';
+            } else if (myRole === 'VIP') {
+                displayAuthor = '익명';
+            }
+
+            const { data, error } = await supabaseClient
+                .from('reasn_posts')
+                .insert([
+                    { category: currentCategory, content: text, user_name: displayAuthor, user_role: myRole }
+                ]);
+
+            if (error) {
+                alert('글 등록 실패: ' + error.message);
+            } else {
+                input.value = '';
+                displayPosts(); 
+            }
+        }
+
+        async function displayPosts() {
+            var board = document.getElementById('board');
+            
+            const { data: posts, error } = await supabaseClient
+                .from('reasn_posts')
+                .select('*')
+                .eq('category', currentCategory)
+                .order('created_at', { ascending: false })
+                .limit(100);
+
+            if (error) {
+                board.innerHTML = '<p style="text-align:center; color:red; margin-top:20px;">불러오기 실패: ' + error.message + '</p>';
+                return;
+            }
+
+            board.innerHTML = '';
+
+            if(!posts || posts.length === 0) {
+                board.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">아직 작성된 글이 없습니다.</p>';
+                return;
+            }
+
+            for (var i = 0; i < posts.length; i++) {
+                var newPost = document.createElement('div');
+                newPost.className = 'post';
+
+                var authorTag = document.createElement('div');
+                authorTag.className = 'post-author';
+                authorTag.innerText = posts[i].user_name;
+
+                if (posts[i].user_name !== '익명') {
+                    var badge = document.createElement('span');
+                    
+                    if (posts[i].user_role === 'ADMIN') {
+                        badge.className = 'author-badge badge-admin';
+                        badge.innerText = 'ADMIN';
+                    } else if (posts[i].user_role === 'VIP') {
+                        badge.className = 'author-badge badge-vip';
+                        badge.innerText = 'VIP';
+                    } else {
+                        badge.className = 'author-badge badge-user';
+                        badge.innerText = 'USER';
+                    }
+                    authorTag.appendChild(badge);
+                }
+                newPost.appendChild(authorTag);
+
+                var contentTag = document.createElement('div');
+                contentTag.innerText = posts[i].content;
+                newPost.appendChild(contentTag);
+
+                var timeTag = document.createElement('div');
+                timeTag.className = 'post-time';
+                var dateStr = new Date(posts[i].created_at).toLocaleString('ko-KR');
+                timeTag.innerText = dateStr;
+                newPost.appendChild(timeTag);
+
+                board.appendChild(newPost);
+            }
+        }
+
+        async function handleLogout() {
+            await supabaseClient.auth.signOut();
+            localStorage.clear(); 
+            alert('로그아웃 되었습니다.');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
