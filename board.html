@@ -2,31 +2,31 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>reasn - 익명 커뮤니티</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         /* 🖤 블랙 앤 화이트 테마 */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body { font-family: Arial, sans-serif; background-color: #fafafa; color: #111; display: flex; flex-direction: column; min-height: 100vh; }
         
-        header { background-color: #111; color: #fff; padding: 20px; text-align: center; font-weight: bold; font-size: 20px; position: relative; letter-spacing: 1px; }
-        .user-info { position: absolute; right: 20px; top: 22px; font-size: 13px; font-weight: normal; color: #ccc; }
-        .logout-btn { background: none; border: 1px solid #555; color: #ccc; padding: 3px 8px; margin-left: 10px; border-radius: 3px; cursor: pointer; font-size: 11px; }
+        header { background-color: #111; color: #fff; padding: 20px; text-align: center; font-weight: bold; font-size: 20px; position: relative; letter-spacing: 1px; z-index: 10; }
+        .user-info { position: absolute; right: 20px; top: 22px; font-size: 13px; font-weight: normal; color: #ccc; z-index: 11; }
+        .logout-btn { background: none; border: 1px solid #555; color: #ccc; padding: 3px 8px; margin-left: 10px; border-radius: 3px; cursor: pointer; font-size: 11px; display: inline-block; }
         .logout-btn:hover { background-color: #fff; color: #111; border-color: #fff; }
         
-        .container { display: flex; flex: 1; max-width: 800px; width: 100%; margin: 0 auto; padding: 20px 10px; flex-direction: column; }
+        .container { display: flex; flex: 1; max-width: 800px; width: 100%; margin: 0 auto; padding: 20px 10px; flex-direction: column; position: relative; z-index: 1; }
         
-        /* 📱 모바일 탭 스크롤 보완 */
-        .board-controls { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #111; margin-bottom: 20px; gap: 10px; }
-        .category-tabs { display: flex; flex: 1; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+        /* 📱 모바일 탭 터치 및 스크롤 안정화 */
+        .board-controls { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #111; margin-bottom: 20px; gap: 10px; position: relative; }
+        .category-tabs { display: flex; flex: 1; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
         .category-tabs::-webkit-scrollbar { display: none; }
         
-        .category-btn { padding: 15px 15px; background: none; border: none; font-size: 15px; font-weight: bold; color: #888; cursor: pointer; transition: all 0.2s; border-bottom: 4px solid transparent; flex-shrink: 0; }
+        .category-btn { padding: 15px 12px; background: none; border: none; font-size: 15px; font-weight: bold; color: #888; cursor: pointer; transition: all 0.2s; border-bottom: 4px solid transparent; flex-shrink: 0; display: inline-block; }
         .category-btn:hover, .category-btn.active { color: #111; }
-        .category-btn.active { border-bottom: 4px solid #111; margin-bottom: -2px; }
+        .category-btn.active { border-bottom: 4px solid #111; margin-bottom: -2px; color: #111; }
         
-        .open-write-btn { padding: 10px 15px; background-color: #111; color: #fff; border: none; font-size: 13px; font-weight: bold; cursor: pointer; letter-spacing: 0.5px; flex-shrink: 0; }
+        .open-write-btn { padding: 10px 15px; background-color: #111; color: #fff; border: none; font-size: 13px; font-weight: bold; cursor: pointer; letter-spacing: 0.5px; flex-shrink: 0; display: inline-block; }
         .open-write-btn:hover { background-color: #333; }
 
         /* 📋 게시글 카드 목록 */
@@ -68,24 +68,24 @@
         .comment-btn { padding: 8px 15px; background: #111; color: #fff; border: none; font-size: 13px; font-weight: bold; cursor: pointer; }
 
         /* 모달 팝업 */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 2000; }
         .modal-content { background: #fff; padding: 30px; width: 90%; max-width: 600px; border: 1px solid #111; display: flex; flex-direction: column; gap: 15px; position: relative; }
         .modal-title { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
-        .modal-close { position: absolute; right: 25px; top: 25px; font-size: 20px; cursor: pointer; color: #888; }
+        .modal-close { position: absolute; right: 25px; top: 25px; font-size: 25px; cursor: pointer; color: #888; padding: 5px; }
         .modal-close:hover { color: #111; }
         .title-input { width: 100%; padding: 12px; border: 1px solid #e1e1e1; font-size: 15px; font-weight: bold; }
         .title-input:focus { outline: 1px solid #111; }
         .content-textarea { width: 100%; height: 200px; padding: 12px; border: 1px solid #e1e1e1; resize: none; font-size: 14px; }
         .content-textarea:focus { outline: 1px solid #111; }
-        .submit-btn { width: 100%; padding: 14px; background-color: #111; color: #fff; border: none; cursor: pointer; font-size: 15px; font-weight: bold; letter-spacing: 1px; transition: background 0.2s; }
+        .submit-btn { width: 100%; padding: 14px; background-color: #111; color: #fff; border: none; cursor: pointer; font-size: 15px; font-weight: bold; letter-spacing: 1px; }
         .submit-btn:hover { background-color: #333; }
 
         @media (max-width: 480px) {
-            header { font-size: 17px; padding: 15px; }
-            .user-info { right: 10px; top: 16px; font-size: 11px; }
-            .logout-btn { padding: 2px 5px; margin-left: 5px; font-size: 9px; }
-            .category-btn { padding: 12px 10px; font-size: 13px; }
-            .open-write-btn { padding: 8px 10px; font-size: 12px; }
+            header { font-size: 16px; padding: 15px 10px; text-align: left; }
+            .user-info { right: 10px; top: 14px; font-size: 11px; position: absolute; }
+            .logout-btn { padding: 2px 6px; margin-left: 4px; font-size: 9px; }
+            .category-btn { padding: 12px 10px; font-size: 14px; }
+            .open-write-btn { padding: 8px 12px; font-size: 12px; }
         }
     </style>
 </head>
@@ -94,7 +94,7 @@
     <header>
         🤫 reasn
         <div class="user-info" id="userInfo">
-            <span id="userText">회원 정보 확인 중...</span>
+            <span id="userText">인증 확인 중...</span>
             <button class="logout-btn" onclick="handleLogout()">LOGOUT</button>
         </div>
     </header>
@@ -137,22 +137,162 @@
         let myEmail = localStorage.getItem('reasn_user_email') || 'unknown';
 
         window.onload = function() {
-            // 1. 화면 먼저 무조건 그리기 (세션 로드 지연으로 스크립트 먹통되는 현상 방지)
+            // 1. UI 렌더링 및 기본 글 불러오기 무조건 선행
             updateUserUI();
             displayPosts();
 
-            // 2. 백그라운드에서 실시간 인증 세션 체크 후 동기화
-            checkSession();
+            // 2. 비동기 세션 처리는 별도로 독립시켜 먹통 문제 방지
+            setTimeout(function() {
+                checkSession();
+            }, 10);
         }
 
         async function checkSession() {
             try {
-                const { data: { session }, error } = await supabaseClient.auth.getSession();
-                if (session && session.user) {
-                    const user = session.user;
+                const { data: dataSession, error } = await supabaseClient.auth.getSession();
+                if (dataSession && dataSession.session && dataSession.session.user) {
+                    const user = dataSession.session.user;
                     myName = user.user_metadata.display_name || myName;
                     myRole = user.user_metadata.role || myRole;
                     myEmail = user.email || myEmail;
 
                     localStorage.setItem('reasn_user_name', myName);
-                    localStorage.setItem('reasn_user_
+                    localStorage.setItem('reasn_user_role', myRole);
+                    localStorage.setItem('reasn_user_email', myEmail);
+                }
+            } catch (e) {
+                console.log("세물 세션 확인 생략");
+            } finally {
+                updateUserUI();
+            }
+        }
+
+        function updateUserUI() {
+            const userTextEl = document.getElementById('userText');
+            if (userTextEl) {
+                userTextEl.innerText = myName + " (" + myRole + ")";
+            }
+        }
+
+        function openModal() { 
+            document.getElementById('writeModal').style.display = 'flex'; 
+        }
+        
+        function closeModal() {
+            document.getElementById('writeModal').style.display = 'none';
+            document.getElementById('postTitle').value = '';
+            document.getElementById('box').value = '';
+        }
+
+        function changeCategory(categoryName) {
+            currentCategory = categoryName;
+            var buttons = document.querySelectorAll('.category-btn');
+            buttons.forEach(btn => {
+                if(btn.id === 'tab-' + categoryName) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+            displayPosts();
+        }
+
+        async function savePost() {
+            var titleInput = document.getElementById('postTitle');
+            var contentInput = document.getElementById('box');
+            
+            var titleText = titleInput.value.trim();
+            var contentText = contentInput.value.trim();
+            
+            if (titleText === '') return alert('제목을 입력해주세요!');
+            if (contentText === '') return alert('내용을 입력해주세요!');
+
+            let displayAuthor = myName;
+            if (myRole === 'ADMIN') displayAuthor = '관리자';
+            else if (currentCategory === '익명게시판') displayAuthor = '익명';
+
+            const { data, error } = await supabaseClient
+                .from('reasn_posts')
+                .insert([{ 
+                    category: currentCategory, 
+                    title: titleText, 
+                    content: contentText, 
+                    user_name: displayAuthor, 
+                    user_role: myRole, 
+                    user_email: myEmail 
+                }]);
+
+            if (error) {
+                alert('글 등록 실패: ' + error.message);
+            } else {
+                closeModal();
+                displayPosts(); 
+            }
+        }
+
+        async function displayPosts() {
+            var board = document.getElementById('board');
+            if (!board) return;
+            
+            board.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">불러오는 중...</p>';
+            
+            try {
+                const { data: posts, error } = await supabaseClient
+                    .from('reasn_posts')
+                    .select('*')
+                    .eq('category', currentCategory)
+                    .order('created_at', { ascending: true }) 
+                    .limit(100);
+
+                if (error) {
+                    board.innerHTML = '<p style="text-align:center; color:red; margin-top:20px;">불러오기 실패: ' + error.message + '</p>';
+                    return;
+                }
+
+                board.innerHTML = '';
+
+                if(!posts || posts.length === 0) {
+                    board.innerHTML = '<p style="text-align:center; color:#999; margin-top:40px;">아직 작성된 글이 없습니다.</p>';
+                    return;
+                }
+
+                const { data: allComments } = await supabaseClient
+                    .from('reasn_comments')
+                    .select('*')
+                    .order('created_at', { ascending: true });
+
+                let displayList = [];
+                for (var i = 0; i < posts.length; i++) {
+                    posts[i].local_num = i + 1;
+                    displayList.unshift(posts[i]); 
+                }
+
+                for (var i = 0; i < displayList.length; i++) {
+                    const post = displayList[i];
+                    
+                    var newPost = document.createElement('div');
+                    newPost.className = 'post';
+
+                    var postHeader = document.createElement('div');
+                    postHeader.className = 'post-header';
+                    postHeader.setAttribute('onclick', `togglePostBody(${post.id})`);
+
+                    var titleLine = document.createElement('div');
+                    titleLine.className = 'post-title-line';
+                    titleLine.innerHTML = `<span class="post-num">${post.local_num}</span> <span>${post.title || '제목 없음'}</span>`;
+                    
+                    var metaLine = document.createElement('div');
+                    metaLine.className = 'post-meta-line';
+                    
+                    let displayAuthorName = post.user_name;
+                    if (post.user_role !== 'ADMIN' && currentCategory === '익명게시판') {
+                        displayAuthorName = '익명';
+                    }
+                    metaLine.innerText = displayAuthorName;
+
+                    if (displayAuthorName !== '익명') {
+                        var badge = document.createElement('span');
+                        badge.className = `author-badge badge-${post.user_role.toLowerCase()}`;
+                        badge.innerText = post.user_role;
+                        metaLine.appendChild(badge);
+                    }
+
+                    postHeader.appendChild(titleLine);
+                    post
