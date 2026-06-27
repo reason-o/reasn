@@ -1,6 +1,8 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import Header from "../../components/Header";
+
 export default async function DashboardPage() {
   const cookieStore = await cookies();
   const auth = cookieStore.get("auth");
@@ -10,12 +12,40 @@ export default async function DashboardPage() {
   }
 
   return (
-    <main style={{ padding: "40px", fontFamily: "sans-serif" }}>
-      <h1>🎉 Dashboard</h1>
+    <>
+      <Header username={auth.value} />
 
-      <p>안녕하세요, <b>{auth.value}</b>님!</p>
+      <main
+        style={{
+          padding: "40px",
+          fontFamily: "sans-serif",
+        }}
+      >
+        <h1>Welcome back 👋</h1>
 
-      <p>로그인된 사용자만 이 페이지를 볼 수 있습니다.</p>
-    </main>
+        <p>프로젝트를 시작해보세요.</p>
+
+        <button
+          style={{
+            padding: "12px 20px",
+            fontSize: "16px",
+            cursor: "pointer",
+          }}
+        >
+          + New Project
+        </button>
+
+        <div
+          style={{
+            marginTop: "30px",
+            padding: "30px",
+            border: "1px solid #ddd",
+            borderRadius: "12px",
+          }}
+        >
+          아직 프로젝트가 없습니다.
+        </div>
+      </main>
+    </>
   );
 }
