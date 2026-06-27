@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>우리들의 대나무숲</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 500px; margin: 50px auto; padding: 20px; background-color: #f5f5f5; }
+        h1 { text-align: center; color: #333; }
+        textarea { width: 100%; height: 80px; padding: 10px; box-sizing: border-box; margin-bottom: 10px; border: 1px solid #ddd; resize: none; }
+        button { width: 100%; padding: 12px; background-color: #2bc48a; color: white; border: none; cursor: pointer; font-size: 16px; font-weight: bold; }
+        .post { background: white; padding: 15px; margin-top: 15px; border-left: 5px solid #2bc48a; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; }
+        .post-time { font-size: 12px; color: #999; margin-top: 5px; }
+        .delete-btn { position: absolute; top: 10px; right: 15px; background: none; border: none; color: #ff5c5c; cursor: pointer; font-size: 12px; width: auto; padding: 0; }
+    </style>
+</head>
+<body>
+
+    <h1>🤫 익명 대나무숲</h1>
+    
+    <div>
+        <textarea id="box" placeholder="여기에 하고 싶은 말을 익명으로 적어보세요..."></textarea>
+        <button onclick="savePost()">대나무숲에 외치기</button>
+    </div>
+
+    <div id="board"></div>
+
+    <script>
+        // 페이지가 켜지면 저장되어 있던 글들을 자동으로 불러옵니다.
+        window.onload = function() {
+            displayPosts();
+        }
+
+        // 1. 글을 저장하는 기능
+        function savePost() {
+            var input = document.getElementById('box');
+            var text = input.value.trim();
+            
+            if (text === '') {
+                alert('내용을 입력해주세요!');
+                return;
+            }
+
+            // 기존에 저장된 글들을 가져오거나, 없으면 빈 배열([])을 만듭니다.
+            var posts = JSON.parse(localStorage.getItem('myPosts')) || [];
+            
+            // 새 글을 배열에 추가합니다.
+            posts.push(text);
+            
+            // 비밀 금고(로컬 스토리지)에 다시 저장합니다.
+            localStorage.setItem('myPosts', JSON.stringify(posts));
+
+            input.value = ''; // 입력창 비우기
+            displayPosts(); // 화면 갱신
+        }
+
+        // 2. 저장된 글들을 화면에 그려주는 기능
+        function displayPosts() {
+            var board = document.getElementById('board');
+            board.innerHTML = ''; // 기존 화면을 깨끗이 비우기
+
+            var posts = JSON.parse(localStorage.getItem('myPosts')) || [];
+
+            // 최신 글이 맨 위로 오도록 배열을 뒤집어서 화면에 보여줍니다.
+            for (var i = posts.length - 1; i >= 0; i--) {
+                var newPost = document.createElement('div');
+                newPost.className = 'post';
+                newPost.innerText = posts[i];
+
+                // 시간 표시
+                var timeTag = document.createElement('div');
+                timeTag.className = 'post-time';
+                timeTag.innerText = '익명 • 방금 전';
+                newPost.appendChild(timeTag);
+
+                // 삭제 버튼 추가
+                var deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.innerText = '지우기';
+                deleteBtn.setAttribute('onclick', 'deletePost(' + i + ')');
+                newPost.appendChild(deleteBtn);
+
+                board.appendChild(newPost);
+            }
+        }
+
+        // 3. 글을 삭제하는 기능
+        function deletePost(index) {
+            if (confirm('이 글을 삭제하시겠습니까?')) {
+                var posts = JSON.parse(localStorage.getItem('myPosts')) || [];
+                posts.splice(index, 1); // 해당 위치의 글을 삭제
+                localStorage.setItem('myPosts', JSON.stringify(posts)); // 다시 저장
+                displayPosts(); // 화면 갱신
+            }
+        }
+    </script>
+
+</body>
+</html>
