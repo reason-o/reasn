@@ -17,34 +17,38 @@
         
         .container { display: flex; flex: 1; max-width: 800px; width: 100%; margin: 0 auto; padding: 20px 10px; flex-direction: column; }
         
-        /* 카테고리 탭 스타일 */
+        /* 카테고리 탭 */
         .category-tabs { display: flex; border-bottom: 2px solid #111; margin-bottom: 20px; }
         .category-btn { flex: 1; padding: 15px; background: none; border: none; font-size: 15px; font-weight: bold; color: #888; cursor: pointer; text-align: center; transition: all 0.2s; }
         .category-btn:hover, .category-btn.active { color: #111; }
         .category-btn.active { border-bottom: 4px solid #111; margin-bottom: -2px; }
 
-        /* 글쓰기 영역 */
-        .write-section { background: #fff; padding: 20px; border: 1px solid #e1e1e1; border-radius: 0px; margin-bottom: 30px; }
-        textarea { width: 100%; height: 90px; padding: 12px; border: 1px solid #e1e1e1; border-radius: 0px; resize: none; margin-bottom: 10px; font-size: 14px; }
+        /* 글쓰기 영역 (제목/내용 분리) */
+        .write-section { background: #fff; padding: 20px; border: 1px solid #e1e1e1; margin-bottom: 30px; display: flex; flex-direction: column; gap: 10px; }
+        .title-input { width: 100%; padding: 12px; border: 1px solid #e1e1e1; font-size: 15px; font-weight: bold; }
+        .title-input:focus { outline: 1px solid #111; }
+        textarea { width: 100%; height: 120px; padding: 12px; border: 1px solid #e1e1e1; resize: none; font-size: 14px; }
         textarea:focus { outline: 1px solid #111; }
         .submit-btn { width: 100%; padding: 14px; background-color: #111; color: #fff; border: none; cursor: pointer; font-size: 15px; font-weight: bold; letter-spacing: 1px; transition: background 0.2s; }
         .submit-btn:hover { background-color: #333; }
         
         /* 게시글 카드 */
-        .post { background: #fff; padding: 20px; margin-top: 20px; border: 1px solid #e1e1e1; position: relative; }
-        .post-author { font-weight: bold; color: #111; margin-bottom: 8px; font-size: 14px; display: flex; align-items: center; }
+        .post { background: #fff; padding: 24px; margin-top: 20px; border: 1px solid #e1e1e1; position: relative; }
+        .post-author { font-weight: bold; color: #888; margin-bottom: 12px; font-size: 13px; display: flex; align-items: center; }
         .author-badge { display: inline-block; padding: 2px 6px; font-size: 10px; margin-left: 8px; font-weight: bold; letter-spacing: 0.5px; }
         .badge-user { background-color: #f0f0f0; color: #555; }
         .badge-vip { background-color: #111; color: #fff; }
         .badge-admin { background-color: #ff3b30; color: #fff; }
         
-        .post-content { font-size: 15px; line-height: 1.6; color: #222; margin-bottom: 12px; white-space: pre-wrap; }
-        .post-time { font-size: 11px; color: #aaa; margin-bottom: 15px; }
+        /* 제목과 본문 스타일 분리 */
+        .post-title { font-size: 18px; font-weight: bold; color: #111; margin-bottom: 10px; line-height: 1.4; }
+        .post-content { font-size: 14px; line-height: 1.6; color: #333; margin-bottom: 14px; white-space: pre-wrap; }
+        .post-time { font-size: 11px; color: #aaa; margin-bottom: 18px; }
         
-        /* 💬 댓글 영역 스타일 */
-        .comment-section { border-top: 1px dashed #e1e1e1; padding-top: 15px; margin-top: 15px; background: #fafafa; margin: 15px -20px -20px -20px; padding: 15px 20px; }
+        /* 댓글 영역 */
+        .comment-section { border-top: 1px dashed #e1e1e1; background: #fafafa; margin: 15px -24px -24px -24px; padding: 20px 24px; }
         .comment-list { margin-bottom: 15px; }
-        .comment-item { font-size: 13px; margin-bottom: 8px; line-height: 1.4; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; }
+        .comment-item { font-size: 13px; margin-bottom: 10px; line-height: 1.4; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; }
         .comment-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
         .comment-author { font-weight: bold; color: #111; margin-right: 6px; }
         .comment-badge { font-size: 9px; padding: 1px 4px; margin-right: 6px; background: #eee; }
@@ -75,6 +79,7 @@
 
         <div class="main-content">
             <div class="write-section">
+                <input type="text" id="postTitle" class="title-input" placeholder="제목을 입력하세요">
                 <textarea id="box" placeholder="여기에 생각을 남기세요..."></textarea>
                 <button class="submit-btn" onclick="savePost()">외치기</button>
             </div>
@@ -124,11 +129,16 @@
             displayPosts();
         }
 
-        // 📝 글 저장
+        // 📝 글 저장 (제목 데이터 추가)
         async function savePost() {
-            var input = document.getElementById('box');
-            var text = input.value.trim();
-            if (text === '') return alert('내용을 입력해주세요!');
+            var titleInput = document.getElementById('postTitle');
+            var contentInput = document.getElementById('box');
+            
+            var titleText = titleInput.value.trim();
+            var contentText = contentInput.value.trim();
+            
+            if (titleText === '') return alert('제목을 입력해주세요!');
+            if (contentText === '') return alert('내용을 입력해주세요!');
 
             let displayAuthor = myName;
             if (myRole === 'ADMIN') {
@@ -140,13 +150,14 @@
             const { data, error } = await supabaseClient
                 .from('reasn_posts')
                 .insert([
-                    { category: currentCategory, content: text, user_name: displayAuthor, user_role: myRole }
+                    { category: currentCategory, title: titleText, content: contentText, user_name: displayAuthor, user_role: myRole }
                 ]);
 
             if (error) {
                 alert('글 등록 실패: ' + error.message);
             } else {
-                input.value = '';
+                titleInput.value = '';
+                contentInput.value = '';
                 displayPosts(); 
             }
         }
@@ -155,7 +166,6 @@
         async function displayPosts() {
             var board = document.getElementById('board');
             
-            // 1. 글 가져오기
             const { data: posts, error } = await supabaseClient
                 .from('reasn_posts')
                 .select('*')
@@ -175,7 +185,6 @@
                 return;
             }
 
-            // 2. 댓글 전체 가져오기 (성능을 위해 한 번에 땡겨옵니다)
             const { data: allComments } = await supabaseClient
                 .from('reasn_comments')
                 .select('*')
@@ -187,7 +196,7 @@
                 var newPost = document.createElement('div');
                 newPost.className = 'post';
 
-                // 작성자 및 뱃지
+                // 작성자 및 뱃지 정보
                 var authorTag = document.createElement('div');
                 authorTag.className = 'post-author';
                 authorTag.innerText = post.user_name;
@@ -208,6 +217,12 @@
                 }
                 newPost.appendChild(authorTag);
 
+                // 📌 제목 추가
+                var titleTag = document.createElement('div');
+                titleTag.className = 'post-title';
+                titleTag.innerText = post.title || '제목 없음';
+                newPost.appendChild(titleTag);
+
                 // 본문
                 var contentTag = document.createElement('div');
                 contentTag.className = 'post-content';
@@ -221,14 +236,13 @@
                 timeTag.innerText = dateStr;
                 newPost.appendChild(timeTag);
 
-                // 💬 댓글 영역 생성
+                // 댓글 영역
                 var commentSection = document.createElement('div');
                 commentSection.className = 'comment-section';
 
                 var commentList = document.createElement('div');
                 commentList.className = 'comment-list';
 
-                // 이 글에 달린 댓글들만 필터링해서 꽂아넣기
                 if (allComments) {
                     const postComments = allComments.filter(c => c.post_id == post.id);
                     postComments.forEach(comment => {
@@ -246,7 +260,6 @@
                 }
                 commentSection.appendChild(commentList);
 
-                // 댓글 입력창 양식
                 var inputFlex = document.createElement('div');
                 inputFlex.className = 'comment-input-box';
                 inputFlex.innerHTML = `
@@ -260,14 +273,12 @@
             }
         }
 
-        // 📝 댓글 저장 기능
         async function saveComment(postId) {
             var input = document.getElementById('reply-input-' + postId);
             var text = input.value.trim();
             if (text === '') return alert('댓글 내용을 입력해주세요!');
 
             let displayAuthor = myName;
-            // 댓글도 관리자는 '관리자', VIP는 '익명' 규칙 적용
             if (myRole === 'ADMIN') {
                 displayAuthor = '관리자';
             } else if (myRole === 'VIP') {
@@ -284,7 +295,7 @@
                 alert('댓글 등록 실패: ' + error.message);
             } else {
                 input.value = '';
-                displayPosts(); // 새로고침하여 댓글 반영
+                displayPosts(); 
             }
         }
 
