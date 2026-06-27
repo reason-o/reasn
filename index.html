@@ -3,44 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>reasn - 로그인</title>
+    <title>reasn - 시작하기</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: Arial, sans-serif; background-color: #f5f5f5; display: flex; justify-content: center; align-items: center; height: 100vh; }
         .login-container { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); width: 100%; max-width: 400px; text-align: center; }
         h1 { color: #2bc48a; margin-bottom: 10px; font-size: 28px; }
-        p { color: #666; margin-bottom: 30px; font-size: 14px; }
+        p { color: #666; margin-bottom: 25px; font-size: 14px; }
         input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; }
-        button { width: 100%; padding: 12px; background-color: #2bc48a; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        button { width: 100%; padding: 12px; background-color: #2bc48a; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
         button:hover { background-color: #24a876; }
+        .toggle-link { color: #666; font-size: 14px; cursor: pointer; text-decoration: underline; }
     </style>
 </head>
 <body>
 
     <div class="login-container">
-        <h1>🤫 reasn</h1>
-        <p>우리들의 익명 대나무숲 공간</p>
+        <h1 id="title">🤫 reasn 로그인</h1>
+        <p id="subTitle">우리들의 익명 대나무숲 공간</p>
         
-        <input type="text" id="username" placeholder="닉네임을 입력하세요">
-        <input type="password" id="password" placeholder="비밀번호 (아무거나 입력)">
-        <button onclick="tryLogin()">입장하기</button>
+        <input type="email" id="email" placeholder="이메일 주소 (아이디)">
+        <input type="text" id="nickname" placeholder="사용할 닉네임 (회원가입 시 필수)" style="display: none;">
+        <input type="password" id="password" placeholder="비밀번호">
+        
+        <button id="mainBtn" onclick="handleAuth()">입장하기</button>
+        <div id="toggleAuth" class="toggle-link" onclick="toggleMode()">신규 회원가입하러 가기</div>
     </div>
 
     <script>
-        function tryLogin() {
-            var name = document.getElementById('username').value.trim();
-            var pass = document.getElementById('password').value.trim();
+        // 유저님의 Supabase 주소를 미리 적용해 두었습니다!
+        const SUPABASE_URL = "https://jfsaccbtbvuglvlgagus.supabase.co"; 
+        // ⚠️ 여기에 복사하신 아주 긴 Anon Key를 꼭 붙여넣으세요!
+        const SUPABASE_KEY = "sb_publishable_XU8l4rpJsFPlaHj3cny84Q_v53odH1k";
+        
+        // Supabase 연결 리모컨 생성
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-            if (name === '' || pass === '') {
-                alert('닉네임과 비밀번호를 모두 입력해주세요!');
-                return;
+        let isSignUpMode = false; // 로그인모드와 회원가입모드 전환용 변수
+
+        // 화면 모드 전환 함수
+        function toggleMode() {
+            isSignUpMode = !isSignUpMode;
+            const title = document.getElementById('title');
+            const nicknameInput = document.getElementById('nickname');
+            const mainBtn = document.getElementById('mainBtn');
+            const toggleLink = document.getElementById('toggleAuth');
+
+            if (isSignUpMode) {
+                title.innerText = "📝 reasn 회원가입";
+                nicknameInput.style.display = "block"; // 닉네임창 보이기
+                mainBtn.innerText = "가입 완료하기";
+                toggleLink.innerText = "이미 계정이 있으신가요? 로그인하기";
+            } else {
+                title.innerText = "🤫 reasn 로그인";
+                nicknameInput.style.display = "none";  // 닉네임창 숨기기
+                mainBtn.innerText = "입장하기";
+                toggleLink.innerText = "신규 회원가입하러 가기";
+            }
+        }
+
+        // 로그인 및 회원가입 처리 핵심 로직
+        async function handleAuth() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const nickname = document.getElementById('nickname').value.trim();
+
+            if (!email || !password) {
+                return alert('이메일과 비밀번호를 모두 입력해주세요!');
             }
 
-            // 임시로 로그인 성공 처리를 하고 게시판 화면(board.html)으로 이동시킵니다.
-            alert(name + '님 환영합니다! 대나무숲으로 입장합니다.');
-            window.location.href = 'board.html'; 
+            if (isSignUpMode) {
+                // [회원가입 모드]
+                if (!nickname) return alert('게시판에서 사용할 닉네임을 적어주세요!');
+                
+                // 회원가입 시 닉네임과 함께 기본 등급 'USER'(일반)를 부여합니다.
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            display_name: nickname,
+                            role: 'USER' 
+                        }
+                    }
+                });
+
+                if (error) {
+                    alert('회원가입 실패: ' + error.message);
+                } else {
+                    alert('가입이 완료되었습니다! 가입하신 정보로 로그인해 주세요.');
+                    toggleMode();
+                }
+
+            } else {
+                // [로그인 모드]
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) {
+                    alert('로그인 실패: ' + error.message);
+                } else {
+                    const user = data.user;
+                    // 로그인에 성공하면 브라우저에 유저 닉네임과 등급 정보를 임시 저장합니다.
+                    localStorage.setItem('reasn_user_name', user.user_metadata.display_name);
+                    localStorage.setItem('reasn_user_role', user.user_metadata.role);
+                    
+                    alert(user.user_metadata.display_name + '님 환영합니다! (등급: ' + user.user_metadata.role + ')');
+                    window.location.href = 'board.html';
+                }
+            }
         }
     </script>
-
 </body>
 </html>
