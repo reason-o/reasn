@@ -18,7 +18,7 @@
         .container { display: flex; flex: 1; max-width: 800px; width: 100%; margin: 0 auto; padding: 20px 10px; flex-direction: column; position: relative; z-index: 1; }
         
         /* 📱 모바일 컨트롤러 */
-        .board-controls { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #111; margin-bottom: 20px; gap: 10px; position: relative; }
+        .board-controls { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #111; margin-bottom: 15px; gap: 10px; position: relative; }
         .category-tabs { display: flex; flex: 1; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
         .category-tabs::-webkit-scrollbar { display: none; }
         
@@ -28,6 +28,13 @@
         
         .open-write-btn { padding: 10px 15px; background-color: #111; color: #fff; border: none; font-size: 13px; font-weight: bold; cursor: pointer; letter-spacing: 0.5px; flex-shrink: 0; display: inline-block; }
         .open-write-btn:hover { background-color: #333; }
+
+        /* 🔍 검색창 영역 */
+        .search-wrapper { display: flex; gap: 8px; margin-bottom: 15px; }
+        .search-input { flex: 1; padding: 10px 15px; border: 1px solid #ddd; font-size: 14px; background-color: #fff; }
+        .search-input:focus { outline: 1px solid #111; border-color: #111; }
+        .search-btn { padding: 10px 20px; background-color: #111; color: #fff; border: none; font-size: 13px; font-weight: bold; cursor: pointer; }
+        .search-btn:hover { background-color: #333; }
 
         /* 📋 게시글 카드 목록 */
         .post { background: #fff; padding: 18px 24px; margin-top: 12px; border: 1px solid #e1e1e1; }
@@ -85,6 +92,8 @@
             .logout-btn { padding: 2px 6px; margin-left: 4px; font-size: 9px; }
             .category-btn { padding: 12px 10px; font-size: 14px; }
             .open-write-btn { padding: 8px 12px; font-size: 12px; }
+            .search-input { padding: 8px 12px; font-size: 13px; }
+            .search-btn { padding: 8px 15px; font-size: 12px; }
         }
     </style>
 </head>
@@ -108,6 +117,11 @@
             <button class="open-write-btn" onclick="openModal()">+ 글쓰기</button>
         </div>
 
+        <div class="search-wrapper">
+            <input type="text" id="searchInput" class="search-input" placeholder="검색어를 입력하세요 (제목, 내용)" onkeyup="if(window.event.keyCode==13){searchPosts()}">
+            <button class="search-btn" onclick="searchPosts()">검색</button>
+        </div>
+
         <div class="main-content">
             <div id="board"></div>
         </div>
@@ -124,17 +138,16 @@
     </div>
 
     <script>
-        // 전역 변수 안전 장치 마련 (안 깨지게 기본값 강제 할당)
+        // 전역 변수 안전 장치
         var currentCategory = '자유게시판';
         var myName = '회원';
         var myRole = 'USER';
         var myEmail = 'unknown';
         var supabaseClient = null;
+        var fetchedPostsCache = []; // 검색을 위해 현재 불러온 글들을 담아두는 캐시 저장소
 
-        // 1. 페이지가 로드되면 어떤 에러가 있든 UI와 글 목록부터 무조건 활성화
         window.onload = function() {
             try {
-                // 로컬스토리지 백업 데이터 로드
                 if (window.localStorage) {
                     myName = localStorage.getItem('reasn_user_name') || '회원';
                     myRole = localStorage.getItem('reasn_user_role') || 'USER';
@@ -144,7 +157,6 @@
 
             updateUserUI();
             
-            // Supabase 초기화 독립 검증
             try {
                 const SUPABASE_URL = "https://jfsaccbtbvuglvlgagus.supabase.co"; 
                 const SUPABASE_KEY = "sb_publishable_XU8l4rpJsFPlaHj3cny84Q_v53odH1k"; 
@@ -155,10 +167,8 @@
                 console.error("Supabase 초기화 실패:", subaErr);
             }
 
-            // 글 목록 표시 실행
             displayPosts();
 
-            // 세션 인증 확인은 백그라운드에서 완전히 별개로 실행 (먹통 원천 차단)
             setTimeout(function() {
                 checkSession();
             }, 50);
@@ -182,7 +192,7 @@
                     updateUserUI();
                 }
             } catch (e) {
-                console.log("세션 인증 백그라운드 예외 패스");
+                console.log("幕后 세션체크 패스");
             }
         }
 
@@ -209,6 +219,8 @@
 
         function changeCategory(categoryName) {
             currentCategory = categoryName;
+            // 카테고리 바꾸면 검색창 내용 초기화
+            try { document.getElementById('searchInput').value = ''; } catch(e){}
             try {
                 var buttons = document.querySelectorAll('.category-btn');
                 buttons.forEach(btn => {
@@ -258,6 +270,22 @@
             }
         }
 
+        // 🔍 실시간 리스트 필터링 검색 함수
+        function searchPosts() {
+            try {
+                var keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+                // 캐시된 전체 글 중에서 키워드가 제목이나 본문에 포함되어 있는지 검사
+                var filtered = fetchedPostsCache.filter(function(post) {
+                    var title = (post.title || '').toLowerCase();
+                    var content = (post.content || '').toLowerCase();
+                    return title.includes(keyword) || content.includes(keyword);
+                });
+                renderPostsHTML(filtered);
+            } catch(e) {
+                console.error("검색 중 오류:", e);
+            }
+        }
+
         async function displayPosts() {
             var board = document.getElementById('board');
             if (!board) return;
@@ -282,143 +310,163 @@
                     return;
                 }
 
-                board.innerHTML = '';
-
                 if(!posts || posts.length === 0) {
+                    fetchedPostsCache = [];
                     board.innerHTML = '<p style="text-align:center; color:#999; margin-top:40px;">아직 작성된 글이 없습니다.</p>';
                     return;
                 }
 
-                // 댓글 로드 (에러가 나더라도 본문은 보여주기 위해 독립 예외 처리)
-                let allComments = [];
-                try {
-                    const { data: commentsData } = await supabaseClient
-                        .from('reasn_comments')
-                        .select('*')
-                        .order('created_at', { ascending: true });
-                    if (commentsData) allComments = commentsData;
-                } catch(cErr) { console.log("댓글 로드 패스"); }
-
+                // 번호 매기기 및 최신순 정렬 처리하여 전역 캐시에 임시 저장
                 let displayList = [];
                 for (var i = 0; i < posts.length; i++) {
                     posts[i].local_num = i + 1;
                     displayList.unshift(posts[i]); 
                 }
+                
+                // 검색에 활용할 수 있도록 캐시에 원본 리스트 복사 저장
+                fetchedPostsCache = displayList;
 
-                for (var i = 0; i < displayList.length; i++) {
-                    const post = displayList[i];
-                    
-                    var newPost = document.createElement('div');
-                    newPost.className = 'post';
+                // 화면에 렌더링하기
+                renderPostsHTML(fetchedPostsCache);
 
-                    var postHeader = document.createElement('div');
-                    postHeader.className = 'post-header';
-                    postHeader.setAttribute('onclick', `togglePostBody(${post.id})`);
-
-                    var titleLine = document.createElement('div');
-                    titleLine.className = 'post-title-line';
-                    titleLine.innerHTML = `<span class="post-num">${post.local_num}</span> <span>${post.title || '제목 없음'}</span>`;
-                    
-                    var metaLine = document.createElement('div');
-                    metaLine.className = 'post-meta-line';
-                    
-                    let displayAuthorName = post.user_name || '회원';
-                    let postRole = post.user_role || 'USER';
-
-                    if (postRole !== 'ADMIN' && currentCategory === '익명게시판') {
-                        displayAuthorName = '익명';
-                    }
-                    metaLine.innerText = displayAuthorName;
-
-                    if (displayAuthorName !== '익명') {
-                        var badge = document.createElement('span');
-                        badge.className = `author-badge badge-${postRole.toLowerCase()}`;
-                        badge.innerText = postRole;
-                        metaLine.appendChild(badge);
-                    }
-
-                    postHeader.appendChild(titleLine);
-                    postHeader.appendChild(metaLine);
-                    newPost.appendChild(postHeader);
-
-                    var postBody = document.createElement('div');
-                    postBody.className = 'post-body';
-                    postBody.id = `post-body-${post.id}`;
-
-                    var contentTag = document.createElement('div');
-                    contentTag.className = 'post-content';
-                    contentTag.id = `post-text-${post.id}`;
-                    contentTag.innerText = post.content || '';
-                    postBody.appendChild(contentTag);
-
-                    var timeTag = document.createElement('div');
-                    timeTag.className = 'post-time';
-                    timeTag.innerText = post.created_at ? new Date(post.created_at).toLocaleString('ko-KR') : '';
-                    postBody.appendChild(timeTag);
-
-                    if (myRole === 'ADMIN' || (post.user_email && post.user_email !== 'unknown' && post.user_email === myEmail)) {
-                        var btnGroup = document.createElement('div');
-                        btnGroup.className = 'action-buttons';
-                        btnGroup.innerHTML = `
-                            <button class="action-btn" onclick="editPost(event, ${post.id})">수정</button>
-                            <button class="action-btn delete-btn" onclick="deletePost(event, ${post.id})">삭제</button>
-                        `;
-                        postBody.appendChild(btnGroup);
-                    }
-
-                    var commentSection = document.createElement('div');
-                    commentSection.className = 'comment-section';
-
-                    var commentList = document.createElement('div');
-                    commentList.className = 'comment-list';
-
-                    if (allComments.length > 0) {
-                        const postComments = allComments.filter(c => c.post_id == post.id);
-                        
-                        let anonymousMap = new Map();
-                        let anonCounter = 1;
-
-                        postComments.forEach(comment => {
-                            var commentItem = document.createElement('div');
-                            commentItem.className = 'comment-item';
-                            
-                            let commentAuthorName = comment.user_name || '익명';
-                            let commentRole = comment.user_role || 'USER';
-                            let badgeHtml = '';
-
-                            if (currentCategory === '익명게시판' && commentRole !== 'ADMIN') {
-                                const commenterKey = comment.user_email || comment.user_name;
-                                if (!anonymousMap.has(commenterKey)) {
-                                    anonymousMap.set(commenterKey, anonCounter++);
-                                }
-                                commentAuthorName = `익명${anonymousMap.get(commenterKey)}`;
-                            } else {
-                                if (commentAuthorName !== '익명') {
-                                    badgeHtml = `<span class="comment-badge" style="color:${commentRole==='ADMIN'?'#ff3b30':'#555'}">${commentRole}</span>`;
-                                }
-                            }
-
-                            commentItem.innerHTML = `${badgeHtml}<span class="comment-author">${commentAuthorName}</span><span>${comment.content || ''}</span>`;
-                            commentList.appendChild(commentItem);
-                        });
-                    }
-                    commentSection.appendChild(commentList);
-
-                    var inputFlex = document.createElement('div');
-                    inputFlex.className = 'comment-input-box';
-                    inputFlex.innerHTML = `
-                        <input type="text" class="comment-input" id="reply-input-${post.id}" placeholder="댓글을 입력하세요...">
-                        <button class="comment-btn" onclick="saveComment(${post.id})">등록</button>
-                    `;
-                    commentSection.appendChild(inputFlex);
-                    postBody.appendChild(commentSection);
-                    
-                    newPost.appendChild(postBody);
-                    board.appendChild(newPost);
-                }
             } catch (postError) {
                 board.innerHTML = '<p style="text-align:center; color:red; margin-top:20px;">데이터 로드 중 오류가 발생했습니다.</p>';
                 console.error(postError);
+            }
+        }
+
+        // 실제로 리스트 데이터를 기반으로 HTML 카드를 그려주는 핵심 렌더링 함수
+        async function renderPostsHTML(postsList) {
+            var board = document.getElementById('board');
+            if (!board) return;
+
+            if(postsList.length === 0) {
+                board.innerHTML = '<p style="text-align:center; color:#999; margin-top:40px;">검색 결과가 없습니다.</p>';
+                return;
+            }
+
+            board.innerHTML = '';
+
+            // 댓글 로드 (독립 예외 처리)
+            let allComments = [];
+            try {
+                const { data: commentsData } = await supabaseClient
+                    .from('reasn_comments')
+                    .select('*')
+                    .order('created_at', { ascending: true });
+                if (commentsData) allComments = commentsData;
+            } catch(cErr) { console.log("댓글 로드 패스"); }
+
+            for (var i = 0; i < postsList.length; i++) {
+                const post = postsList[i];
+                
+                var newPost = document.createElement('div');
+                newPost.className = 'post';
+
+                var postHeader = document.createElement('div');
+                postHeader.className = 'post-header';
+                postHeader.setAttribute('onclick', `togglePostBody(${post.id})`);
+
+                var titleLine = document.createElement('div');
+                titleLine.className = 'post-title-line';
+                titleLine.innerHTML = `<span class="post-num">${post.local_num}</span> <span>${post.title || '제목 없음'}</span>`;
+                
+                var metaLine = document.createElement('div');
+                metaLine.className = 'post-meta-line';
+                
+                let displayAuthorName = post.user_name || '회원';
+                let postRole = post.user_role || 'USER';
+
+                if (postRole !== 'ADMIN' && currentCategory === '익명게시판') {
+                    displayAuthorName = '익명';
+                }
+                metaLine.innerText = displayAuthorName;
+
+                if (displayAuthorName !== '익명') {
+                    var badge = document.createElement('span');
+                    badge.className = `author-badge badge-${postRole.toLowerCase()}`;
+                    badge.innerText = postRole;
+                    metaLine.appendChild(badge);
+                }
+
+                postHeader.appendChild(titleLine);
+                postHeader.appendChild(metaLine);
+                newPost.appendChild(postHeader);
+
+                var postBody = document.createElement('div');
+                postBody.className = 'post-body';
+                postBody.id = `post-body-${post.id}`;
+
+                var contentTag = document.createElement('div');
+                contentTag.className = 'post-content';
+                contentTag.id = `post-text-${post.id}`;
+                contentTag.innerText = post.content || '';
+                postBody.appendChild(contentTag);
+
+                var timeTag = document.createElement('div');
+                timeTag.className = 'post-time';
+                timeTag.innerText = post.created_at ? new Date(post.created_at).toLocaleString('ko-KR') : '';
+                postBody.appendChild(timeTag);
+
+                if (myRole === 'ADMIN' || (post.user_email && post.user_email !== 'unknown' && post.user_email === myEmail)) {
+                    var btnGroup = document.createElement('div');
+                    btnGroup.className = 'action-buttons';
+                    btnGroup.innerHTML = `
+                        <button class="action-btn" onclick="editPost(event, ${post.id})">수정</button>
+                        <button class="action-btn delete-btn" onclick="deletePost(event, ${post.id})">삭제</button>
+                    `;
+                    postBody.appendChild(btnGroup);
+                }
+
+                var commentSection = document.createElement('div');
+                commentSection.className = 'comment-section';
+
+                var commentList = document.createElement('div');
+                commentList.className = 'comment-list';
+
+                if (allComments.length > 0) {
+                    const postComments = allComments.filter(c => c.post_id == post.id);
+                    
+                    let anonymousMap = new Map();
+                    let anonCounter = 1;
+
+                    postComments.forEach(comment => {
+                        var commentItem = document.createElement('div');
+                        commentItem.className = 'comment-item';
+                        
+                        let commentAuthorName = comment.user_name || '익명';
+                        let commentRole = comment.user_role || 'USER';
+                        let badgeHtml = '';
+
+                        if (currentCategory === '익명게시판' && commentRole !== 'ADMIN') {
+                            const commenterKey = comment.user_email || comment.user_name;
+                            if (!anonymousMap.has(commenterKey)) {
+                                anonymousMap.set(commenterKey, anonCounter++);
+                            }
+                            commentAuthorName = `익명${anonymousMap.get(commenterKey)}`;
+                        } else {
+                            if (commentAuthorName !== '익명') {
+                                badgeHtml = `<span class="comment-badge" style="color:${commentRole==='ADMIN'?'#ff3b30':'#555'}">${commentRole}</span>`;
+                            }
+                        }
+
+                        commentItem.innerHTML = `${badgeHtml}<span class="comment-author">${commentAuthorName}</span><span>${comment.content || ''}</span>`;
+                        commentList.appendChild(commentItem);
+                    });
+                }
+                commentSection.appendChild(commentList);
+
+                var inputFlex = document.createElement('div');
+                inputFlex.className = 'comment-input-box';
+                inputFlex.innerHTML = `
+                    <input type="text" class="comment-input" id="reply-input-${post.id}" placeholder="댓글을 입력하세요...">
+                    <button class="comment-btn" onclick="saveComment(${post.id})">등록</button>
+                `;
+                commentSection.appendChild(inputFlex);
+                postBody.appendChild(commentSection);
+                
+                newPost.appendChild(postBody);
+                board.appendChild(newPost);
             }
         }
 
