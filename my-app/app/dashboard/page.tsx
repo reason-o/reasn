@@ -1,15 +1,21 @@
-export default function DashboardPage() {
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+
+export default async function DashboardPage() {
+  const cookieStore = await cookies();
+  const auth = cookieStore.get("auth");
+
+  if (!auth) {
+    redirect("/login");
+  }
+
   return (
     <main style={{ padding: "40px", fontFamily: "sans-serif" }}>
       <h1>🎉 Dashboard</h1>
 
-      <p>로그인에 성공했습니다.</p>
+      <p>안녕하세요, <b>{auth.value}</b>님!</p>
 
-      <hr />
-
-      <h2>REASN</h2>
-
-      <p>이곳이 앞으로 서비스를 만들어갈 메인 화면입니다.</p>
+      <p>로그인된 사용자만 이 페이지를 볼 수 있습니다.</p>
     </main>
   );
 }
