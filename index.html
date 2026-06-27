@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>reasn - 로그인</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background-color: #f5f5f5; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .login-container { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); width: 100%; max-width: 400px; text-align: center; }
+        h1 { color: #2bc48a; margin-bottom: 10px; font-size: 28px; }
+        p { color: #666; margin-bottom: 30px; font-size: 14px; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; }
+        button { width: 100%; padding: 12px; background-color: #2bc48a; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        button:hover { background-color: #24a876; }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <h1>🤫 reasn</h1>
+        <p>우리들의 익명 대나무숲 공간</p>
+        
+        <input type="text" id="username" placeholder="닉네임을 입력하세요">
+        <input type="password" id="password" placeholder="비밀번호 (아무거나 입력)">
+        <button onclick="tryLogin()">입장하기</button>
+    </div>
+
+    <script>
+        function tryLogin() {
+            var name = document.getElementById('username').value.trim();
+            var pass = document.getElementById('password').value.trim();
+
+            if (name === '' || pass === '') {
+                alert('닉네임과 비밀번호를 모두 입력해주세요!');
+                return;
+            }
+
+            // 임시로 로그인 성공 처리를 하고 게시판 화면(board.html)으로 이동시킵니다.
+            alert(name + '님 환영합니다! 대나무숲으로 입장합니다.');
+            window.location.href = 'board.html'; 
+        }
+    </script>
+
+</body>
+</html>
