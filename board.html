@@ -17,27 +17,28 @@
         
         .container { display: flex; flex: 1; max-width: 800px; width: 100%; margin: 0 auto; padding: 20px 10px; flex-direction: column; }
         
-        /* 카테고리 탭 및 글쓰기 버튼 정렬 상자 */
-        .board-controls { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #111; margin-bottom: 20px; }
-        .category-tabs { display: flex; flex: 1; }
-        .category-btn { padding: 15px 20px; background: none; border: none; font-size: 15px; font-weight: bold; color: #888; cursor: pointer; transition: all 0.2s; border-bottom: 4px solid transparent; }
+        /* 📱 모바일에서 탭이 잘리지 않고 스크롤되도록 가로 넘침 처리 */
+        .board-controls { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #111; margin-bottom: 20px; gap: 10px; }
+        .category-tabs { display: flex; flex: 1; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+        .category-tabs::-webkit-scrollbar { display: none; } /* 스크롤바 숨기기 */
+        
+        .category-btn { padding: 15px 15px; background: none; border: none; font-size: 15px; font-weight: bold; color: #888; cursor: pointer; transition: all 0.2s; border-bottom: 4px solid transparent; flex-shrink: 0; }
         .category-btn:hover, .category-btn.active { color: #111; }
         .category-btn.active { border-bottom: 4px solid #111; margin-bottom: -2px; }
         
-        .open-write-btn { padding: 10px 20px; background-color: #111; color: #fff; border: none; font-size: 14px; font-weight: bold; cursor: pointer; letter-spacing: 0.5px; }
+        .open-write-btn { padding: 10px 15px; background-color: #111; color: #fff; border: none; font-size: 13px; font-weight: bold; cursor: pointer; letter-spacing: 0.5px; flex-shrink: 0; }
         .open-write-btn:hover { background-color: #333; }
 
         /* 📋 게시글 카드 목록 */
         .post { background: #fff; padding: 18px 24px; margin-top: 12px; border: 1px solid #e1e1e1; }
         .post-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
         
-        /* 글 번호와 제목 정렬 (숫자만 심플하게 표시) */
         .post-title-line { font-size: 16px; font-weight: bold; color: #111; flex: 1; margin-right: 15px; display: flex; gap: 15px; }
         .post-num { color: #888; font-weight: normal; font-size: 14px; min-width: 25px; }
         
         .post-meta-line { font-size: 12px; color: #888; display: flex; align-items: center; gap: 10px; }
         
-        /* 접고 펼쳐지는 본문 내용 영역 */
+        /* 본문 내용 영역 */
         .post-body { display: none; padding-top: 20px; border-top: 1px solid #f0f0f0; margin-top: 15px; }
         .author-badge { display: inline-block; padding: 2px 6px; font-size: 10px; font-weight: bold; }
         .badge-user { background-color: #f0f0f0; color: #555; }
@@ -47,7 +48,7 @@
         .post-content { font-size: 14px; line-height: 1.6; color: #333; margin-bottom: 14px; white-space: pre-wrap; }
         .post-time { font-size: 11px; color: #aaa; margin-bottom: 15px; }
         
-        /* 수정/삭제 버튼 */
+        /* 버튼 */
         .action-buttons { display: flex; gap: 10px; margin-bottom: 20px; }
         .action-btn { background: none; border: 1px solid #ddd; color: #666; padding: 5px 12px; font-size: 12px; cursor: pointer; }
         .action-btn:hover { border-color: #111; color: #111; }
@@ -66,7 +67,7 @@
         .comment-input:focus { outline: 1px solid #111; }
         .comment-btn { padding: 8px 15px; background: #111; color: #fff; border: none; font-size: 13px; font-weight: bold; cursor: pointer; }
 
-        /* 글쓰기 모달 팝업 */
+        /* 모달 팝업 */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: #fff; padding: 30px; width: 90%; max-width: 600px; border: 1px solid #111; display: flex; flex-direction: column; gap: 15px; position: relative; }
         .modal-title { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
@@ -78,6 +79,15 @@
         .content-textarea:focus { outline: 1px solid #111; }
         .submit-btn { width: 100%; padding: 14px; background-color: #111; color: #fff; border: none; cursor: pointer; font-size: 15px; font-weight: bold; letter-spacing: 1px; transition: background 0.2s; }
         .submit-btn:hover { background-color: #333; }
+
+        /* 📱 모달창 및 상단 반응형 폰트 축소 */
+        @media (max-width: 480px) {
+            header { font-size: 17px; padding: 15px; }
+            .user-info { right: 10px; top: 16px; font-size: 11px; }
+            .logout-btn { padding: 2px 5px; margin-left: 5px; font-size: 9px; }
+            .category-btn { padding: 12px 10px; font-size: 13px; }
+            .open-write-btn { padding: 8px 10px; font-size: 12px; }
+        }
     </style>
 </head>
 <body>
@@ -95,4 +105,121 @@
             <div class="category-tabs">
                 <button class="category-btn active" id="tab-자유게시판" onclick="changeCategory('자유게시판')">자유게시판</button>
                 <button class="category-btn" id="tab-익명게시판" onclick="changeCategory('익명게시판')">익명게시판</button>
-                <button class="category-btn" id="tab-건의해요" onclick="changeCategory('건의
+                <button class="category-btn" id="tab-건의해요" onclick="changeCategory('건의해요')">건의해요</button>
+            </div>
+            <button class="open-write-btn" onclick="openModal()">+ 글쓰기</button>
+        </div>
+
+        <div class="main-content">
+            <div id="board"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="writeModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <div class="modal-title">새 글 쓰기</div>
+            <input type="text" id="postTitle" class="title-input" placeholder="제목을 입력하세요">
+            <textarea id="box" class="content-textarea" placeholder="내용을 채워주세요..."></textarea>
+            <button class="submit-btn" onclick="savePost()">외치기</button>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://jfsaccbtbvuglvlgagus.supabase.co"; 
+        const SUPABASE_KEY = "sb_publishable_XU8l4rpJsFPlaHj3cny84Q_v53odH1k"; 
+        
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        var currentCategory = '자유게시판';
+        
+        let myName = localStorage.getItem('reasn_user_name') || '미확인 회원';
+        let myRole = localStorage.getItem('reasn_user_role') || 'USER';
+        let myEmail = 'unknown';
+
+        window.onload = async function() {
+            // ⚡ 초기 렌더링 시 로컬스토리지에 값이 있다면 먼저 세팅
+            updateUserUI();
+            displayPosts();
+
+            try {
+                // 실시간 Supabase 인증 세션 가져오기 적극 수행
+                const { data: { session }, error } = await supabaseClient.auth.getSession();
+                if (session && session.user) {
+                    const user = session.user;
+                    myName = user.user_metadata.display_name || '닉네임 없음';
+                    myRole = user.user_metadata.role || 'USER';
+                    myEmail = user.email;
+
+                    // 캐시에 확실하게 동기화
+                    localStorage.setItem('reasn_user_name', myName);
+                    localStorage.setItem('reasn_user_role', myRole);
+                } else {
+                    // 세션이 풀린 경우 로컬 데이터 지우고 강제 처리 방지
+                    if(myName === '미확인 회원') {
+                        document.getElementById('userText').innerText = "로그인 필요";
+                    }
+                }
+            } catch (e) {
+                console.log("세션 동기화 건너뜀");
+            } finally {
+                // 어떤 상황이든 최종 확인된 값으로 UI 갱신 및 데이터 재로드
+                updateUserUI();
+                displayPosts(); 
+            }
+        }
+
+        function updateUserUI() {
+            document.getElementById('userText').innerText = myName + " (" + myRole + ")";
+        }
+
+        function openModal() { document.getElementById('writeModal').style.display = 'flex'; }
+        function closeModal() {
+            document.getElementById('writeModal').style.display = 'none';
+            document.getElementById('postTitle').value = '';
+            document.getElementById('box').value = '';
+        }
+
+        function changeCategory(categoryName) {
+            currentCategory = categoryName;
+            var buttons = document.querySelectorAll('.category-btn');
+            buttons.forEach(btn => {
+                if(btn.id === 'tab-' + categoryName) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+            displayPosts();
+        }
+
+        async function savePost() {
+            var titleInput = document.getElementById('postTitle');
+            var contentInput = document.getElementById('box');
+            
+            var titleText = titleInput.value.trim();
+            var contentText = contentInput.value.trim();
+            
+            if (titleText === '') return alert('제목을 입력해주세요!');
+            if (contentText === '') return alert('내용을 입력해주세요!');
+
+            let displayAuthor = myName;
+            
+            if (myRole === 'ADMIN') {
+                displayAuthor = '관리자';
+            } else if (currentCategory === '익명게시판') {
+                displayAuthor = '익명';
+            }
+
+            const { data, error } = await supabaseClient
+                .from('reasn_posts')
+                .insert([{ 
+                    category: currentCategory, 
+                    title: titleText, 
+                    content: contentText, 
+                    user_name: displayAuthor, 
+                    user_role: myRole, 
+                    user_email: myEmail 
+                }]);
+
+            if (error) {
+                alert('글 등록 실패: ' + error.message);
+            } else {
+                closeModal();
