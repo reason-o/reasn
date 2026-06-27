@@ -11,7 +11,8 @@
         body { font-family: Arial, sans-serif; background-color: #fafafa; color: #111; display: flex; flex-direction: column; min-height: 100vh; }
         
         header { background-color: #111; color: #fff; padding: 20px; text-align: center; font-weight: bold; font-size: 20px; position: relative; letter-spacing: 1px; z-index: 10; }
-        .user-info { position: absolute; right: 20px; top: 22px; font-size: 13px; font-weight: normal; color: #ccc; z-index: 11; }
+        .user-info { position: absolute; right: 20px; top: 15px; font-size: 13px; font-weight: normal; color: #ccc; z-index: 11; text-align: right; }
+        .user-stats { font-size: 11px; color: #aaa; margin-top: 2px; }
         .logout-btn { background: none; border: 1px solid #555; color: #ccc; padding: 3px 8px; margin-left: 10px; border-radius: 3px; cursor: pointer; font-size: 11px; display: inline-block; }
         .logout-btn:hover { background-color: #fff; color: #111; border-color: #fff; }
         
@@ -49,7 +50,7 @@
         .post-body { display: none; padding-top: 20px; border-top: 1px solid #f0f0f0; margin-top: 15px; }
         .author-badge { display: inline-block; padding: 2px 6px; font-size: 10px; font-weight: bold; }
         .badge-user { background-color: #f0f0f0; color: #555; }
-        .badge-vip { background-color: #111; color: #fff; }
+        .badge-vip { background-color: #007bff; color: #fff; }
         .badge-admin { background-color: #ff3b30; color: #fff; }
         
         .post-content { font-size: 14px; line-height: 1.6; color: #333; margin-bottom: 14px; white-space: pre-wrap; }
@@ -78,6 +79,7 @@
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 2000; }
         .modal-content { background: #fff; padding: 30px; width: 90%; max-width: 600px; border: 1px solid #111; display: flex; flex-direction: column; gap: 15px; position: relative; }
         .modal-title { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
+        .modal-write-notice { font-size: 12px; color: #ff3b30; font-weight: bold; margin-bottom: 5px; }
         .modal-close { position: absolute; right: 25px; top: 25px; font-size: 25px; cursor: pointer; color: #888; padding: 5px; }
         .modal-close:hover { color: #111; }
         .title-input { width: 100%; padding: 12px; border: 1px solid #e1e1e1; font-size: 15px; font-weight: bold; }
@@ -88,7 +90,7 @@
 
         @media (max-width: 480px) {
             header { font-size: 16px; padding: 15px 10px; text-align: left; }
-            .user-info { right: 10px; top: 14px; font-size: 11px; position: absolute; }
+            .user-info { right: 10px; top: 10px; font-size: 11px; position: absolute; }
             .logout-btn { padding: 2px 6px; margin-left: 4px; font-size: 9px; }
             .category-btn { padding: 12px 10px; font-size: 14px; }
             .open-write-btn { padding: 8px 12px; font-size: 12px; }
@@ -102,8 +104,11 @@
     <header>
         🤫 reasn
         <div class="user-info" id="userInfo">
-            <span id="userText">회원</span>
-            <button class="logout-btn" onclick="handleLogout()">LOGOUT</button>
+            <div>
+                <span id="userText">회원</span>
+                <button class="logout-btn" onclick="handleLogout()">LOGOUT</button>
+            </div>
+            <div class="user-stats" id="userStats">포인트: 0점 | 등업 대기 중</div>
         </div>
     </header>
     
@@ -130,7 +135,8 @@
     <div class="modal-overlay" id="writeModal">
         <div class="modal-content">
             <span class="modal-close" onclick="closeModal()">&times;</span>
-            <div class="modal-title">새 글 쓰기</div>
+            <div class="modal-title" id="modalTitle">새 글 쓰기</div>
+            <div class="modal-write-notice" id="modalNotice"></div>
             <input type="text" id="postTitle" class="title-input" placeholder="제목을 입력하세요">
             <textarea id="box" class="content-textarea" placeholder="내용을 채워주세요..."></textarea>
             <button class="submit-btn" onclick="savePost()">외치기</button>
@@ -138,13 +144,13 @@
     </div>
 
     <script>
-        // 전역 변수 안전 장치
         var currentCategory = '자유게시판';
         var myName = '회원';
         var myRole = 'USER';
         var myEmail = 'unknown';
+        var myPoints = 0;    
         var supabaseClient = null;
-        var fetchedPostsCache = []; // 검색을 위해 현재 불러온 글들을 담아두는 캐시 저장소
+        var fetchedPostsCache = []; 
 
         window.onload = function() {
             try {
@@ -152,6 +158,7 @@
                     myName = localStorage.getItem('reasn_user_name') || '회원';
                     myRole = localStorage.getItem('reasn_user_role') || 'USER';
                     myEmail = localStorage.getItem('reasn_user_email') || 'unknown';
+                    myPoints = parseInt(localStorage.getItem('reasn_user_points') || '0');
                 }
             } catch(e) { console.log(e); }
 
@@ -183,16 +190,19 @@
                     myName = user.user_metadata.display_name || myName;
                     myRole = user.user_metadata.role || myRole;
                     myEmail = user.email || myEmail;
+                    
+                    myPoints = user.user_metadata.points !== undefined ? parseInt(user.user_metadata.points) : myPoints;
 
                     if (window.localStorage) {
                         localStorage.setItem('reasn_user_name', myName);
                         localStorage.setItem('reasn_user_role', myRole);
                         localStorage.setItem('reasn_user_email', myEmail);
+                        localStorage.setItem('reasn_user_points', myPoints);
                     }
                     updateUserUI();
                 }
             } catch (e) {
-                console.log("幕后 세션체크 패스");
+                console.log("세션체크 패스");
             }
         }
 
@@ -202,11 +212,41 @@
                 if (userTextEl) {
                     userTextEl.innerText = myName + " (" + myRole + ")";
                 }
+                const statsEl = document.getElementById('userStats');
+                if (statsEl) {
+                    // 등업 상태 메시지 동적 안내
+                    if (myRole === 'ADMIN' || myRole === 'VIP') {
+                        statsEl.innerText = "포인트: " + myPoints + "점 | 등업 완료 ✨";
+                    } else if (myPoints >= 100) {
+                        statsEl.innerText = "포인트: " + myPoints + "점 | 💎 등업 가능! (요청 필요)";
+                    } else {
+                        statsEl.innerText = "포인트: " + myPoints + "점 | ⏳ " + (100 - myPoints) + "점 더 필요";
+                    }
+                }
             } catch(e) {}
         }
 
         function openModal() { 
-            try { document.getElementById('writeModal').style.display = 'flex'; } catch(e){}
+            try { 
+                // 🚨 [권한 제한 규칙] USER 등급은 익명게시판 글쓰기 원천 차단
+                if (currentCategory === '익명게시판' && myRole !== 'VIP' && myRole !== 'ADMIN') {
+                    alert('🔒 익명게시판은 VIP 등급 전용 공간입니다. 자유게시판에서 포인트를 쌓아 등업을 신청해 주세요!');
+                    return;
+                }
+
+                document.getElementById('modalTitle').innerText = currentCategory + ' 글쓰기';
+                
+                const noticeEl = document.getElementById('modalNotice');
+                if (currentCategory === '자유게시판') {
+                    noticeEl.innerText = "💡 자유게시판에 글을 쓰면 10포인트가 적립됩니다.";
+                } else if (currentCategory === '익명게시판') {
+                    noticeEl.innerText = "🔒 VIP 익명 공간입니다. 작성자의 개인 신원이 완벽히 보장됩니다.";
+                } else {
+                    noticeEl.innerText = "";
+                }
+
+                document.getElementById('writeModal').style.display = 'flex'; 
+            } catch(e){}
         }
         
         function closeModal() {
@@ -219,7 +259,6 @@
 
         function changeCategory(categoryName) {
             currentCategory = categoryName;
-            // 카테고리 바꾸면 검색창 내용 초기화
             try { document.getElementById('searchInput').value = ''; } catch(e){}
             try {
                 var buttons = document.querySelectorAll('.category-btn');
@@ -261,29 +300,41 @@
 
                 if (error) {
                     alert('글 등록 실패: ' + error.message);
-                } else {
-                    closeModal();
-                    displayPosts(); 
+                    return;
                 }
+
+                // 🚨 [포인트 적립 규칙] 자유게시판에 작성 시에만 포인트 지급
+                if (currentCategory === '자유게시판') {
+                    myPoints += 10; 
+
+                    localStorage.setItem('reasn_user_points', myPoints);
+
+                    try {
+                        await supabaseClient.auth.updateUser({
+                            data: { points: myPoints }
+                        });
+                    } catch(uErr) { console.log("메타데이터 동기화 패스"); }
+                }
+
+                closeModal();
+                updateUserUI();
+                displayPosts(); 
+                
             } catch(e) {
                 alert('서버 통신 오류가 발생했습니다.');
             }
         }
 
-        // 🔍 실시간 리스트 필터링 검색 함수
         function searchPosts() {
             try {
                 var keyword = document.getElementById('searchInput').value.trim().toLowerCase();
-                // 캐시된 전체 글 중에서 키워드가 제목이나 본문에 포함되어 있는지 검사
                 var filtered = fetchedPostsCache.filter(function(post) {
                     var title = (post.title || '').toLowerCase();
                     var content = (post.content || '').toLowerCase();
                     return title.includes(keyword) || content.includes(keyword);
                 });
                 renderPostsHTML(filtered);
-            } catch(e) {
-                console.error("검색 중 오류:", e);
-            }
+            } catch(e) { console.error(e); }
         }
 
         async function displayPosts() {
@@ -291,9 +342,8 @@
             if (!board) return;
             
             board.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">불러오는 중...</p>';
-            
             if (!supabaseClient) {
-                board.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">연결 끊김 (새로고침이 필요합니다)</p>';
+                board.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">연결 끊김</p>';
                 return;
             }
 
@@ -316,38 +366,29 @@
                     return;
                 }
 
-                // 번호 매기기 및 최신순 정렬 처리하여 전역 캐시에 임시 저장
                 let displayList = [];
                 for (var i = 0; i < posts.length; i++) {
                     posts[i].local_num = i + 1;
                     displayList.unshift(posts[i]); 
                 }
                 
-                // 검색에 활용할 수 있도록 캐시에 원본 리스트 복사 저장
                 fetchedPostsCache = displayList;
-
-                // 화면에 렌더링하기
                 renderPostsHTML(fetchedPostsCache);
 
             } catch (postError) {
-                board.innerHTML = '<p style="text-align:center; color:red; margin-top:20px;">데이터 로드 중 오류가 발생했습니다.</p>';
-                console.error(postError);
+                board.innerHTML = '<p style="text-align:center; color:red; margin-top:20px;">오류 발생</p>';
             }
         }
 
-        // 실제로 리스트 데이터를 기반으로 HTML 카드를 그려주는 핵심 렌더링 함수
         async function renderPostsHTML(postsList) {
             var board = document.getElementById('board');
             if (!board) return;
-
             if(postsList.length === 0) {
                 board.innerHTML = '<p style="text-align:center; color:#999; margin-top:40px;">검색 결과가 없습니다.</p>';
                 return;
             }
-
             board.innerHTML = '';
 
-            // 댓글 로드 (독립 예외 처리)
             let allComments = [];
             try {
                 const { data: commentsData } = await supabaseClient
@@ -355,7 +396,7 @@
                     .select('*')
                     .order('created_at', { ascending: true });
                 if (commentsData) allComments = commentsData;
-            } catch(cErr) { console.log("댓글 로드 패스"); }
+            } catch(cErr) {}
 
             for (var i = 0; i < postsList.length; i++) {
                 const post = postsList[i];
@@ -426,7 +467,6 @@
 
                 if (allComments.length > 0) {
                     const postComments = allComments.filter(c => c.post_id == post.id);
-                    
                     let anonymousMap = new Map();
                     let anonCounter = 1;
 
@@ -446,7 +486,7 @@
                             commentAuthorName = `익명${anonymousMap.get(commenterKey)}`;
                         } else {
                             if (commentAuthorName !== '익명') {
-                                badgeHtml = `<span class="comment-badge" style="color:${commentRole==='ADMIN'?'#ff3b30':'#555'}">${commentRole}</span>`;
+                                badgeHtml = `<span class="comment-badge" style="color:${commentRole==='ADMIN'?'#ff3b30':'#007bff'}">${commentRole}</span>`;
                             }
                         }
 
@@ -473,9 +513,7 @@
         function togglePostBody(postId) {
             try {
                 var body = document.getElementById(`post-body-${postId}`);
-                if (body) {
-                    body.style.display = (body.style.display === 'block') ? 'none' : 'block';
-                }
+                if (body) body.style.display = (body.style.display === 'block') ? 'none' : 'block';
             } catch(e){}
         }
 
