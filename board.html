@@ -24,14 +24,17 @@
         .category-btn:hover, .category-btn.active { color: #111; }
         .category-btn.active { border-bottom: 4px solid #111; margin-bottom: -2px; }
         
-        /* ✏️ 팝업을 열어줄 상단 글쓰기 버튼 */
         .open-write-btn { padding: 10px 20px; background-color: #111; color: #fff; border: none; font-size: 14px; font-weight: bold; cursor: pointer; letter-spacing: 0.5px; }
         .open-write-btn:hover { background-color: #333; }
 
         /* 📋 게시글 카드 목록 */
         .post { background: #fff; padding: 18px 24px; margin-top: 12px; border: 1px solid #e1e1e1; }
         .post-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .post-title-line { font-size: 16px; font-weight: bold; color: #111; flex: 1; margin-right: 15px; }
+        
+        /* 글 번호와 제목 정렬 */
+        .post-title-line { font-size: 16px; font-weight: bold; color: #111; flex: 1; margin-right: 15px; display: flex; gap: 10px; }
+        .post-num { color: #888; font-weight: normal; font-size: 14px; min-width: 30px; }
+        
         .post-meta-line { font-size: 12px; color: #888; display: flex; align-items: center; gap: 10px; }
         
         /* 접고 펼쳐지는 본문 내용 영역 */
@@ -63,7 +66,7 @@
         .comment-input:focus { outline: 1px solid #111; }
         .comment-btn { padding: 8px 15px; background: #111; color: #fff; border: none; font-size: 13px; font-weight: bold; cursor: pointer; }
 
-        /* 🚨 글쓰기 모달 팝업 레이아웃 */
+        /* 글쓰기 모달 팝업 */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: #fff; padding: 30px; width: 90%; max-width: 600px; border: 1px solid #111; display: flex; flex-direction: column; gap: 15px; position: relative; }
         .modal-title { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
@@ -88,12 +91,12 @@
     </header>
     
     <div class="container">
-        <!-- 상단 바: 카테고리와 글쓰기 버튼 정렬 -->
         <div class="board-controls">
+            <!-- 📌 변경된 카테고리 이름 적용 -->
             <div class="category-tabs">
-                <button class="category-btn active" id="tab-자유주제" onclick="changeCategory('자유주제')">자유주제</button>
-                <button class="category-btn" id="tab-비밀고민" onclick="changeCategory('비밀고민')">비밀고민</button>
-                <button class="category-btn" id="tab-건의사항" onclick="changeCategory('건의사항')">건의사항</button>
+                <button class="category-btn active" id="tab-자유게시판" onclick="changeCategory('자유게시판')">자유게시판</button>
+                <button class="category-btn" id="tab-익명게시판" onclick="changeCategory('익명게시판')">익명게시판</button>
+                <button class="category-btn" id="tab-건의해요" onclick="changeCategory('건의해요')">건의해요</button>
             </div>
             <button class="open-write-btn" onclick="openModal()">+ 글쓰기</button>
         </div>
@@ -103,7 +106,6 @@
         </div>
     </div>
 
-    <!-- 🚨 글쓰기 팝업 모달창 창틀 -->
     <div class="modal-overlay" id="writeModal">
         <div class="modal-content">
             <span class="modal-close" onclick="closeModal()">&times;</span>
@@ -120,7 +122,8 @@
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        var currentCategory = '자유주제';
+        // 기본 첫 카테고리를 '자유게시판'으로 설정
+        var currentCategory = '자유게시판';
         
         let myName = localStorage.getItem('reasn_user_name') || '미확인 회원';
         let myRole = localStorage.getItem('reasn_user_role') || 'USER';
@@ -149,7 +152,6 @@
             }
         }
 
-        // 팝업 조작 함수
         function openModal() { document.getElementById('writeModal').style.display = 'flex'; }
         function closeModal() {
             document.getElementById('writeModal').style.display = 'none';
@@ -157,21 +159,17 @@
             document.getElementById('box').value = '';
         }
 
-        // 🔄 카테고리 탭 클릭 시 버그 전면 수정된 로직
         function changeCategory(categoryName) {
             currentCategory = categoryName;
             var buttons = document.querySelectorAll('.category-btn');
             buttons.forEach(btn => {
-                if(btn.id === 'tab-' + categoryName) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
+                if(btn.id === 'tab-' + categoryName) btn.classList.add('active');
+                else btn.classList.remove('active');
             });
             displayPosts();
         }
 
-        // 📝 글 저장 (카테고리 누락 버그 수정 완료)
+        // 📝 글 저장
         async function savePost() {
             var titleInput = document.getElementById('postTitle');
             var contentInput = document.getElementById('box');
@@ -183,10 +181,14 @@
             if (contentText === '') return alert('내용을 입력해주세요!');
 
             let displayAuthor = myName;
-            if (myRole === 'ADMIN') displayAuthor = '관리자';
-            else if (myRole === 'VIP') displayAuthor = '익명';
+            
+            // 👑 규칙 1: 카테고리별 작성자 이름 노출 필터링
+            if (myRole === 'ADMIN') {
+                displayAuthor = '관리자';
+            } else if (currentCategory === '익명게시판') {
+                displayAuthor = '익명';
+            }
 
-            // 확실하게 현재 카테고리(currentCategory)를 전송하여 데이터를 물리게 합니다.
             const { data, error } = await supabaseClient
                 .from('reasn_posts')
                 .insert([{ 
@@ -206,7 +208,7 @@
             }
         }
 
-        // 🔍 글 목록 로딩 (아코디언 토글형)
+        // 🔍 목록 렌더링
         async function displayPosts() {
             var board = document.getElementById('board');
             board.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">불러오는 중...</p>';
@@ -245,15 +247,23 @@
                 postHeader.className = 'post-header';
                 postHeader.setAttribute('onclick', `togglePostBody(${post.id})`);
 
+                // 📌 글 번호 부여 (고유 ID 번호 매핑)
                 var titleLine = document.createElement('div');
                 titleLine.className = 'post-title-line';
-                titleLine.innerText = post.title || '제목 없음';
+                titleLine.innerHTML = `<span class="post-num">No.${post.id}</span> <span>${post.title || '제목 없음'}</span>`;
                 
                 var metaLine = document.createElement('div');
                 metaLine.className = 'post-meta-line';
-                metaLine.innerText = post.user_name;
+                
+                // 관리자가 아니고 익명게시판일 경우 이름 무조건 '익명' 강제 매핑
+                let displayAuthorName = post.user_name;
+                if (post.user_role !== 'ADMIN' && currentCategory === '익명게시판') {
+                    displayAuthorName = '익명';
+                }
+                metaLine.innerText = displayAuthorName;
 
-                if (post.user_name !== '익명') {
+                // 익명게시판이 아니거나 관리자일 때만 등급 뱃지 표시
+                if (displayAuthorName !== '익명') {
                     var badge = document.createElement('span');
                     badge.className = `author-badge badge-${post.user_role.toLowerCase()}`;
                     badge.innerText = post.user_role;
@@ -297,11 +307,33 @@
 
                 if (allComments) {
                     const postComments = allComments.filter(c => c.post_id == post.id);
+                    
+                    // 🔒 익명게시판 전용 실시간 댓글 익명 순번 매핑 맵(Map) 생성
+                    let anonymousMap = new Map();
+                    let anonCounter = 1;
+
                     postComments.forEach(comment => {
                         var commentItem = document.createElement('div');
                         commentItem.className = 'comment-item';
-                        let badgeHtml = comment.user_name !== '익명' ? `<span class="comment-badge" style="color:${comment.user_role==='ADMIN'?'#ff3b30':'#555'}">${comment.user_role}</span>` : '';
-                        commentItem.innerHTML = `${badgeHtml}<span class="comment-author">${comment.user_name}</span><span>${comment.content}</span>`;
+                        
+                        let commentAuthorName = comment.user_name;
+                        let badgeHtml = '';
+
+                        // 익명게시판 댓글 로직 처리
+                        if (currentCategory === '익명게시판' && comment.user_role !== 'ADMIN') {
+                            const commenterKey = comment.user_email || comment.user_name;
+                            if (!anonymousMap.has(commenterKey)) {
+                                anonymousMap.set(commenterKey, anonCounter++);
+                            }
+                            commentAuthorName = `익명${anonymousMap.get(commenterKey)}`;
+                        } else {
+                            // 일반 게시판이거나 관리자일 경우 배지 추가
+                            if (comment.user_name !== '익명') {
+                                badgeHtml = `<span class="comment-badge" style="color:${comment.user_role==='ADMIN'?'#ff3b30':'#555'}">${comment.user_role}</span>`;
+                            }
+                        }
+
+                        commentItem.innerHTML = `${badgeHtml}<span class="comment-author">${commentAuthorName}</span><span>${comment.content}</span>`;
                         commentList.appendChild(commentItem);
                     });
                 }
@@ -344,6 +376,7 @@
             else displayPosts();
         }
 
+        // 📝 댓글 저장
         async function saveComment(postId) {
             var input = document.getElementById('reply-input-' + postId);
             var text = input.value.trim();
@@ -351,9 +384,18 @@
 
             let displayAuthor = myName;
             if (myRole === 'ADMIN') displayAuthor = '관리자';
-            else if (myRole === 'VIP') displayAuthor = '익명';
+            else if (currentCategory === '익명게시판') displayAuthor = '익명';
 
-            const { data, error } = await supabaseClient.from('reasn_comments').insert([{ post_id: postId, content: text, user_name: displayAuthor, user_role: myRole }]);
+            // 댓글 유저 식별을 위해 작성자 이메일(myEmail)도 임시 필드로 주입 가능하도록 설계
+            const { data, error } = await supabaseClient
+                .from('reasn_comments')
+                .insert([{ 
+                    post_id: postId, 
+                    content: text, 
+                    user_name: displayAuthor, 
+                    user_role: myRole,
+                    user_email: myEmail 
+                }]);
 
             if (error) alert('댓글 등록 실패: ' + error.message);
             else {
