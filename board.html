@@ -28,6 +28,7 @@
         .author-badge { display: inline-block; padding: 2px 6px; font-size: 11px; border-radius: 3px; margin-left: 5px; font-weight: bold; }
         .badge-user { background-color: #eee; color: #666; }
         .badge-vip { background-color: #ffd700; color: #8b6508; }
+        .badge-admin { background-color: #ff4d4d; color: white; }
     </style>
 </head>
 <body>
@@ -55,21 +56,17 @@
     </div>
 
     <script>
-        // 유저님의 Supabase 주소를 적용해 두었습니다!
         const SUPABASE_URL = "https://jfsaccbtbvuglvlgagus.supabase.co"; 
-        // ⚠️ 여기에 복사하신 아주 긴 Anon Key를 꼭 붙여넣으세요!
-        const SUPABASE_KEY = "sb_publishable_XU8l4rpJsFPlaHj3cny84Q_v53odH1k";
+        const SUPABASE_KEY = "sb_publishable_XU8l4rpJsFPlaHj3cny84Q_v53odH1k"; // 키 반영 완료!
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         var currentCategory = '자유주제';
         
-        // 로그인한 사람의 닉네임과 등급을 브라우저 기억장치에서 가져옵니다.
         const myName = localStorage.getItem('reasn_user_name') || '미확인 회원';
         const myRole = localStorage.getItem('reasn_user_role') || 'USER';
 
         window.onload = function() {
-            // 상단 바에 내 정보 띄우기
             document.getElementById('userInfo').innerText = myName + "님 (" + myRole + ")";
             displayPosts();
         }
@@ -84,17 +81,95 @@
             displayPosts();
         }
 
-        // 📝 1. 진짜 Supabase 서버 창고에 글 저장하기
         async function savePost() {
             var input = document.getElementById('box');
             var text = input.value.trim();
             if (text === '') return alert('내용을 입력해주세요!');
 
-            // 규칙 적용: VIP면 '익명'으로, 일반회원이면 진짜 내 닉네임으로 저장명 결정
             let displayAuthor = myName;
-            if (myRole === 'VIP') {
+            
+            // 👑 관리자는 '관리자'로 박히고, VIP는 '익명'으로 박히는 규칙
+            if (myRole === 'ADMIN') {
+                displayAuthor = '관리자';
+            } else if (myRole === 'VIP') {
                 displayAuthor = '익명';
             }
 
-            // Supabase의 reasn_posts 테이블로 데이터 던지기!
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
+                .from('reasn_posts')
+                .insert([
+                    { category: currentCategory, content: text, user_name: displayAuthor, user_role: myRole }
+                ]);
+
+            if (error) {
+                alert('글 등록 실패: ' + error.message);
+            } else {
+                input.value = '';
+                displayPosts(); 
+            }
+        }
+
+        async function displayPosts() {
+            var board = document.getElementById('board');
+            board.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">글을 불러오는 중...</p>';
+
+            const { data: posts, error } = await supabaseClient
+                .from('reasn_posts')
+                .select('*')
+                .eq('category', currentCategory)
+                .order('created_at', { ascending: false })
+                .limit(100);
+
+            if (error) {
+                board.innerHTML = '<p style="text-align:center; color:red; margin-top:20px;">불러오기 실패: ' + error.message + '</p>';
+                return;
+            }
+
+            board.innerHTML = '';
+
+            if(!posts || posts.length === 0) {
+                board.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">아직 작성된 글이 없습니다.</p>';
+                return;
+            }
+
+            for (var i = 0; i < posts.length; i++) {
+                var newPost = document.createElement('div');
+                newPost.className = 'post';
+
+                var authorTag = document.createElement('div');
+                authorTag.className = 'post-author';
+                authorTag.innerText = posts[i].user_name;
+
+                if (posts[i].user_name !== '익명') {
+                    var badge = document.createElement('span');
+                    
+                    if (posts[i].user_role === 'ADMIN') {
+                        badge.className = 'author-badge badge-admin';
+                        badge.innerText = 'ADMIN';
+                    } else if (posts[i].user_role === 'VIP') {
+                        badge.className = 'author-badge badge-vip';
+                        badge.innerText = 'VIP';
+                    } else {
+                        badge.className = 'author-badge badge-user';
+                        badge.innerText = 'USER';
+                    }
+                    authorTag.appendChild(badge);
+                }
+                newPost.appendChild(authorTag);
+
+                var contentTag = document.createElement('div');
+                contentTag.innerText = posts[i].content;
+                newPost.appendChild(contentTag);
+
+                var timeTag = document.createElement('div');
+                timeTag.className = 'post-time';
+                var dateStr = new Date(posts[i].created_at).toLocaleString('ko-KR');
+                timeTag.innerText = dateStr;
+                newPost.appendChild(timeTag);
+
+                board.appendChild(newPost);
+            }
+        }
+    </script>
+</body>
+</html>

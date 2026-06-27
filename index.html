@@ -32,17 +32,13 @@
     </div>
 
     <script>
-        // 유저님의 Supabase 주소를 미리 적용해 두었습니다!
         const SUPABASE_URL = "https://jfsaccbtbvuglvlgagus.supabase.co"; 
-        // ⚠️ 여기에 복사하신 아주 긴 Anon Key를 꼭 붙여넣으세요!
-        const SUPABASE_KEY = "sb_publishable_XU8l4rpJsFPlaHj3cny84Q_v53odH1k";
+        const SUPABASE_KEY = "sb_publishable_XU8l4rpJsFPlaHj3cny84Q_v53odH1k"; // 키 반영 완료!
         
-        // Supabase 연결 리모컨 생성
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let isSignUpMode = false; // 로그인모드와 회원가입모드 전환용 변수
+        let isSignUpMode = false;
 
-        // 화면 모드 전환 함수
         function toggleMode() {
             isSignUpMode = !isSignUpMode;
             const title = document.getElementById('title');
@@ -52,18 +48,17 @@
 
             if (isSignUpMode) {
                 title.innerText = "📝 reasn 회원가입";
-                nicknameInput.style.display = "block"; // 닉네임창 보이기
+                nicknameInput.style.display = "block";
                 mainBtn.innerText = "가입 완료하기";
                 toggleLink.innerText = "이미 계정이 있으신가요? 로그인하기";
             } else {
                 title.innerText = "🤫 reasn 로그인";
-                nicknameInput.style.display = "none";  // 닉네임창 숨기기
+                nicknameInput.style.display = "none";
                 mainBtn.innerText = "입장하기";
                 toggleLink.innerText = "신규 회원가입하러 가기";
             }
         }
 
-        // 로그인 및 회원가입 처리 핵심 로직
         async function handleAuth() {
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value.trim();
@@ -74,10 +69,8 @@
             }
 
             if (isSignUpMode) {
-                // [회원가입 모드]
                 if (!nickname) return alert('게시판에서 사용할 닉네임을 적어주세요!');
                 
-                // 회원가입 시 닉네임과 함께 기본 등급 'USER'(일반)를 부여합니다.
                 const { data, error } = await supabaseClient.auth.signUp({
                     email: email,
                     password: password,
@@ -97,7 +90,6 @@
                 }
 
             } else {
-                // [로그인 모드]
                 const { data, error } = await supabaseClient.auth.signInWithPassword({
                     email: email,
                     password: password
@@ -107,7 +99,6 @@
                     alert('로그인 실패: ' + error.message);
                 } else {
                     const user = data.user;
-                    // 로그인에 성공하면 브라우저에 유저 닉네임과 등급 정보를 임시 저장합니다.
                     localStorage.setItem('reasn_user_name', user.user_metadata.display_name);
                     localStorage.setItem('reasn_user_role', user.user_metadata.role);
                     
