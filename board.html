@@ -17,10 +17,10 @@
         
         .container { display: flex; flex: 1; max-width: 800px; width: 100%; margin: 0 auto; padding: 20px 10px; flex-direction: column; }
         
-        /* 📱 모바일에서 탭이 잘리지 않고 스크롤되도록 가로 넘침 처리 */
+        /* 📱 모바일 탭 스크롤 보완 */
         .board-controls { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #111; margin-bottom: 20px; gap: 10px; }
         .category-tabs { display: flex; flex: 1; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
-        .category-tabs::-webkit-scrollbar { display: none; } /* 스크롤바 숨기기 */
+        .category-tabs::-webkit-scrollbar { display: none; }
         
         .category-btn { padding: 15px 15px; background: none; border: none; font-size: 15px; font-weight: bold; color: #888; cursor: pointer; transition: all 0.2s; border-bottom: 4px solid transparent; flex-shrink: 0; }
         .category-btn:hover, .category-btn.active { color: #111; }
@@ -80,7 +80,6 @@
         .submit-btn { width: 100%; padding: 14px; background-color: #111; color: #fff; border: none; cursor: pointer; font-size: 15px; font-weight: bold; letter-spacing: 1px; transition: background 0.2s; }
         .submit-btn:hover { background-color: #333; }
 
-        /* 📱 모달창 및 상단 반응형 폰트 축소 */
         @media (max-width: 480px) {
             header { font-size: 17px; padding: 15px; }
             .user-info { right: 10px; top: 16px; font-size: 11px; }
@@ -95,7 +94,7 @@
     <header>
         🤫 reasn
         <div class="user-info" id="userInfo">
-            <span id="userText">로딩 중...</span>
+            <span id="userText">회원 정보 확인 중...</span>
             <button class="logout-btn" onclick="handleLogout()">LOGOUT</button>
         </div>
     </header>
@@ -133,93 +132,27 @@
 
         var currentCategory = '자유게시판';
         
-        let myName = localStorage.getItem('reasn_user_name') || '미확인 회원';
+        let myName = localStorage.getItem('reasn_user_name') || '회원';
         let myRole = localStorage.getItem('reasn_user_role') || 'USER';
-        let myEmail = 'unknown';
+        let myEmail = localStorage.getItem('reasn_user_email') || 'unknown';
 
-        window.onload = async function() {
-            // ⚡ 초기 렌더링 시 로컬스토리지에 값이 있다면 먼저 세팅
+        window.onload = function() {
+            // 1. 화면 먼저 무조건 그리기 (세션 로드 지연으로 스크립트 먹통되는 현상 방지)
             updateUserUI();
             displayPosts();
 
+            // 2. 백그라운드에서 실시간 인증 세션 체크 후 동기화
+            checkSession();
+        }
+
+        async function checkSession() {
             try {
-                // 실시간 Supabase 인증 세션 가져오기 적극 수행
                 const { data: { session }, error } = await supabaseClient.auth.getSession();
                 if (session && session.user) {
                     const user = session.user;
-                    myName = user.user_metadata.display_name || '닉네임 없음';
-                    myRole = user.user_metadata.role || 'USER';
-                    myEmail = user.email;
+                    myName = user.user_metadata.display_name || myName;
+                    myRole = user.user_metadata.role || myRole;
+                    myEmail = user.email || myEmail;
 
-                    // 캐시에 확실하게 동기화
                     localStorage.setItem('reasn_user_name', myName);
-                    localStorage.setItem('reasn_user_role', myRole);
-                } else {
-                    // 세션이 풀린 경우 로컬 데이터 지우고 강제 처리 방지
-                    if(myName === '미확인 회원') {
-                        document.getElementById('userText').innerText = "로그인 필요";
-                    }
-                }
-            } catch (e) {
-                console.log("세션 동기화 건너뜀");
-            } finally {
-                // 어떤 상황이든 최종 확인된 값으로 UI 갱신 및 데이터 재로드
-                updateUserUI();
-                displayPosts(); 
-            }
-        }
-
-        function updateUserUI() {
-            document.getElementById('userText').innerText = myName + " (" + myRole + ")";
-        }
-
-        function openModal() { document.getElementById('writeModal').style.display = 'flex'; }
-        function closeModal() {
-            document.getElementById('writeModal').style.display = 'none';
-            document.getElementById('postTitle').value = '';
-            document.getElementById('box').value = '';
-        }
-
-        function changeCategory(categoryName) {
-            currentCategory = categoryName;
-            var buttons = document.querySelectorAll('.category-btn');
-            buttons.forEach(btn => {
-                if(btn.id === 'tab-' + categoryName) btn.classList.add('active');
-                else btn.classList.remove('active');
-            });
-            displayPosts();
-        }
-
-        async function savePost() {
-            var titleInput = document.getElementById('postTitle');
-            var contentInput = document.getElementById('box');
-            
-            var titleText = titleInput.value.trim();
-            var contentText = contentInput.value.trim();
-            
-            if (titleText === '') return alert('제목을 입력해주세요!');
-            if (contentText === '') return alert('내용을 입력해주세요!');
-
-            let displayAuthor = myName;
-            
-            if (myRole === 'ADMIN') {
-                displayAuthor = '관리자';
-            } else if (currentCategory === '익명게시판') {
-                displayAuthor = '익명';
-            }
-
-            const { data, error } = await supabaseClient
-                .from('reasn_posts')
-                .insert([{ 
-                    category: currentCategory, 
-                    title: titleText, 
-                    content: contentText, 
-                    user_name: displayAuthor, 
-                    user_role: myRole, 
-                    user_email: myEmail 
-                }]);
-
-            if (error) {
-                alert('글 등록 실패: ' + error.message);
-            } else {
-                closeModal();
+                    localStorage.setItem('reasn_user_
