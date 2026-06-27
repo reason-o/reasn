@@ -6,25 +6,28 @@
     <title>reasn - 시작하기</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* 🖤 메인 페이지 모던 블랙앤화이트 테마 */
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: Arial, sans-serif; background-color: #f5f5f5; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .login-container { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); width: 100%; max-width: 400px; text-align: center; }
-        h1 { color: #2bc48a; margin-bottom: 10px; font-size: 28px; }
-        p { color: #666; margin-bottom: 25px; font-size: 14px; }
-        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; }
-        button { width: 100%; padding: 12px; background-color: #2bc48a; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
-        button:hover { background-color: #24a876; }
-        .toggle-link { color: #666; font-size: 14px; cursor: pointer; text-decoration: underline; }
+        body { font-family: Arial, sans-serif; background-color: #fafafa; display: flex; justify-content: center; align-items: center; height: 100vh; color: #111; }
+        .login-container { background: white; padding: 50px 40px; border: 1px solid #e1e1e1; width: 100%; max-width: 400px; text-align: center; }
+        h1 { color: #111; margin-bottom: 8px; font-size: 32px; font-weight: bold; letter-spacing: 1px; }
+        p { color: #888; margin-bottom: 35px; font-size: 13px; letter-spacing: 0.5px; }
+        input { width: 100%; padding: 14px; margin-bottom: 15px; border: 1px solid #e1e1e1; font-size: 14px; background-color: #fff; color: #111; }
+        input:focus { outline: 1px solid #111; }
+        button { width: 100%; padding: 14px; background-color: #111; color: white; border: none; font-size: 15px; font-weight: bold; cursor: pointer; margin-bottom: 15px; letter-spacing: 1px; transition: background 0.2s; }
+        button:hover { background-color: #333; }
+        .toggle-link { color: #666; font-size: 13px; cursor: pointer; text-decoration: underline; transition: color 0.2s; }
+        .toggle-link:hover { color: #111; }
     </style>
 </head>
 <body>
 
     <div class="login-container">
-        <h1 id="title">🤫 reasn 로그인</h1>
+        <h1 id="title">reasn</h1>
         <p id="subTitle">우리들의 익명 대나무숲 공간</p>
         
-        <input type="email" id="email" placeholder="이메일 주소 (아이디)">
-        <input type="text" id="nickname" placeholder="사용할 닉네임 (회원가입 시 필수)" style="display: none;">
+        <input type="email" id="email" placeholder="이메일 주소">
+        <input type="text" id="nickname" placeholder="게시판에서 사용할 닉네임" style="display: none;">
         <input type="password" id="password" placeholder="비밀번호">
         
         <button id="mainBtn" onclick="handleAuth()">입장하기</button>
@@ -47,12 +50,12 @@
             const toggleLink = document.getElementById('toggleAuth');
 
             if (isSignUpMode) {
-                title.innerText = "📝 reasn 회원가입";
+                title.innerText = "sign up";
                 nicknameInput.style.display = "block";
                 mainBtn.innerText = "가입 완료하기";
                 toggleLink.innerText = "이미 계정이 있으신가요? 로그인하기";
             } else {
-                title.innerText = "🤫 reasn 로그인";
+                title.innerText = "reasn";
                 nicknameInput.style.display = "none";
                 mainBtn.innerText = "입장하기";
                 toggleLink.innerText = "신규 회원가입하러 가기";
@@ -69,41 +72,27 @@
             }
 
             if (isSignUpMode) {
-                if (!nickname) return alert('게시판에서 사용할 닉네임을 적어주세요!');
+                if (!nickname) return alert('닉네임을 적어주세요!');
                 
                 const { data, error } = await supabaseClient.auth.signUp({
                     email: email,
                     password: password,
-                    options: {
-                        data: {
-                            display_name: nickname,
-                            role: 'USER' 
-                        }
-                    }
+                    options: { data: { display_name: nickname, role: 'USER' } }
                 });
 
-                if (error) {
-                    alert('회원가입 실패: ' + error.message);
-                } else {
-                    alert('가입이 완료되었습니다! 가입하신 정보로 로그인해 주세요.');
+                if (error) alert('회원가입 실패: ' + error.message);
+                else {
+                    alert('가입 완료! 가입하신 정보로 로그인해 주세요.');
                     toggleMode();
                 }
-
             } else {
-                const { data, error } = await supabaseClient.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
+                const { data, error } = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
 
-                if (error) {
-                    alert('로그인 실패: ' + error.message);
-                } else {
+                if (error) alert('로그인 실패: ' + error.message);
+                else {
                     const user = data.user;
-                    // 안전장치: 로컬스토리지와 서버 세션이 어긋나지 않게 확실하게 박아줍니다.
                     localStorage.setItem('reasn_user_name', user.user_metadata.display_name);
                     localStorage.setItem('reasn_user_role', user.user_metadata.role);
-                    
-                    alert(user.user_metadata.display_name + '님 환영합니다!');
                     window.location.href = 'board.html';
                 }
             }
