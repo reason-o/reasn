@@ -244,25 +244,38 @@
         var postsPerPage = 10;
 
         window.onload = function() {
-            // 🔒 [보안 방어벽 1차 트랩]: 로컬스토리지에 가입 이메일 데이터조차 없다면 로그인 안 한 비회원이므로 즉시 로그인 화면으로 튕구기
-            if (window.localStorage && !localStorage.getItem('reasn_user_email')) {
-                alert('🔒 로그인 후 이용 가능합니다.');
-                window.location.href = 'index.html';
-                return;
-            }
-
-            try {
-                if (window.localStorage) {
-                    myName = localStorage.getItem('reasn_user_name') || '회원';
-                    myRole = localStorage.getItem('reasn_user_role') || 'USER';
-                    myEmail = localStorage.getItem('reasn_user_email') || 'unknown';
-                    myPoints = parseInt(localStorage.getItem('reasn_user_points') || '0');
-                    myCreatedAt = localStorage.getItem('reasn_user_created') || '-';
+            // 🔒 [기존의 억울한 튕김 방지]: 로컬스토리지 이메일 체크 시점을 0.5초 뒤로 밀어서 Supabase 세션 로딩 시간 확보
+            setTimeout(async function() {
+                // Supabase 실시간 서버 세션 인증 토큰이 있는지 최우선 확인
+                if (supabaseClient) {
+                    try {
+                        const { data: dataSession } = await supabaseClient.auth.getSession();
+                        
+                        // 서버 세션도 없고, 로컬스토리지에도 가입 데이터가 완전히 없다면 그제서야 진짜 비회원으로 간주하고 차단
+                        if ((!dataSession || !dataSession.session) && (!window.localStorage || !localStorage.getItem('reasn_user_email'))) {
+                            alert('🔒 로그인 후 이용 가능합니다.');
+                            window.location.href = 'index.html';
+                            return;
+                        }
+                    } catch(e) { console.log(e); }
                 }
-            } catch(e) { console.log(e); }
 
-            updateUserUI();
-            
+                // 기존 데이터 로드 흐름 진행
+                try {
+                    if (window.localStorage) {
+                        myName = localStorage.getItem('reasn_user_name') || '회원';
+                        myRole = localStorage.getItem('reasn_user_role') || 'USER';
+                        myEmail = localStorage.getItem('reasn_user_email') || 'unknown';
+                        myPoints = parseInt(localStorage.getItem('reasn_user_points') || '0');
+                        myCreatedAt = localStorage.getItem('reasn_user_created') || '-';
+                    }
+                } catch(e) { console.log(e); }
+
+                updateUserUI();
+                displayPosts();
+                checkSession(); // 정밀 세션 및 등업 체크 진행
+            }, 500); // ⏱️ 0.5초(500ms)의 안전 로딩 완충 시간을 줍니다.
+
             try {
                 const SUPABASE_URL = "https://jfsaccbtbvuglvlgagus.supabase.co"; 
                 const SUPABASE_KEY = "sb_publishable_XU8l4rpJsFPlaHj3cny84Q_v53odH1k"; 
@@ -270,9 +283,6 @@
                     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 }
             } catch(subaErr) { console.error(subaErr); }
-
-            displayPosts();
-            setTimeout(function() { checkSession(); }, 50);
 
             document.addEventListener('click', function(e) {
                 var card = document.getElementById('myProfileCard');
