@@ -46,15 +46,19 @@
 
         /* 📋 각 섹션 제어 클래스 */
         .view-section { display: none; }
-        .listViewSection { display: block; } /* 기본 리스트 노출 */
+        .listViewSection { display: block; } 
         .writeViewSection { flex-direction: column; gap: 15px; padding: 10px 4px; }
         
-        /* 👁️ [새로 추가된 독립된 글 상세보기 뷰 섹션] */
+        /* 👁️ 독립된 글 상세보기 뷰 섹션 */
         .detailViewSection { flex-direction: column; padding: 15px 4px; }
         .detail-title { font-size: 20px; font-weight: bold; color: #111; line-height: 1.4; margin-bottom: 10px; word-break: break-all; }
         .detail-meta { font-size: 13px; color: #666; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 20px; }
-        .detail-content { font-size: 15px; line-height: 1.7; color: #222; white-space: pre-wrap; word-break: break-all; min-height: 150px; margin-bottom: 25px; }
+        .detail-content { font-size: 15px; line-height: 1.7; color: #222; white-space: pre-wrap; word-break: break-all; min-height: 120px; margin-bottom: 25px; }
         .detail-content a { color: #007bff; text-decoration: underline; }
+
+        /* 📑 [새로 추가] 상세보기 하단 서브 리스트 컨테이너 스타일 */
+        .detail-sub-list-wrapper { margin-top: 40px; border-top: 2px solid #111; padding-top: 20px; }
+        .sub-list-title { font-size: 14px; font-weight: bold; color: #555; margin-bottom: 12px; letter-spacing: 0.5px; }
 
         /* ✍️ 글 작성 뷰 관련 스타일 */
         .write-view-title { font-size: 18px; font-weight: bold; color: #111; border-bottom: 2px solid #111; padding-bottom: 8px; margin-bottom: 5px; }
@@ -179,7 +183,8 @@
     
     <div class="container">
         
-        <div id="listModeSection" class="view-section listViewSection">
+        <!-- 📋 [1. 메인 리스트 뷰 섹션] -->
+        <div id="listModeSection" class="listViewSection">
             <div class="board-controls">
                 <div class="category-tabs">
                     <button class="category-btn active" id="tab-자유게시판" onclick="changeCategory('자유게시판')">자유게시판</button>
@@ -198,21 +203,8 @@
             <div class="pagination" id="paginationBox"></div>
         </div>
 
-        <div id="detailModeSection" class="view-section detailViewSection">
-            <div class="detail-title" id="dtPostTitle">게시글 제목 영역</div>
-            <div class="detail-meta" id="dtPostMeta">작성자 정보 및 시간 라인</div>
-            <div class="detail-content" id="dtPostContent">본문 내용 들어가는 곳</div>
-            
-            <div class="action-buttons" id="dtActionButtons"></div>
-            
-            <div class="comment-section" id="dtCommentSection"></div>
-            
-            <div class="write-btn-group" style="margin-top: 20px;">
-                <button class="submit-btn cancel-btn" onclick="switchToListView()">🔙 목록으로 돌아가기</button>
-            </div>
-        </div>
-
-        <div id="writeModeSection" class="view-section writeViewSection">
+        <!-- ✍️ [2. 전체 화면 전환형 글 작성 뷰 섹션] -->
+        <div id="writeModeSection" class="writeViewSection view-section">
             <div class="write-view-title" id="writeFormTitle">새 글 작성하기</div>
             <input type="text" id="postTitle" class="title-input" placeholder="제목을 입력하세요">
             <textarea id="box" class="content-textarea" placeholder="생각이나 이야기를 채워주세요..."></textarea>
@@ -229,8 +221,32 @@
             </div>
         </div>
 
+        <!-- 👁️ [3. 전체 화면 전환형 독립 글 상세보기 뷰 섹션] (사양 전면 적용) -->
+        <div id="detailModeSection" class="detailViewSection view-section">
+            <div class="detail-title" id="detPostTitle">제목 로딩 중...</div>
+            <div class="detail-meta" id="detPostMeta">작성자 정보 로딩 중...</div>
+            <div class="detail-content" id="detPostContent">내용 로딩 중...</div>
+            
+            <!-- 수정/삭제/숨김/이동 버튼이 렌더링될 구역 -->
+            <div id="detailActionButtons" class="action-buttons"></div>
+            
+            <!-- 독립된 하단 댓글 레이아웃 구역 -->
+            <div class="comment-section" style="border-top: 1px solid #111; margin-top:20px;">
+                <div id="detailCommentList" class="comment-list"></div>
+                <div class="comment-input-box">
+                    <input type="text" class="comment-input" id="detailReplyInput" placeholder="댓글을 입력하세요...">
+                    <button class="comment-btn" id="detailCommentSubmitBtn">등록</button>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <button class="submit-btn cancel-btn" onclick="switchToListView()">← 목록으로 돌아가기</button>
+            </div>
+        </div>
+
     </div>
 
+    <!-- 비밀번호 변경 모달 -->
     <div class="modal-overlay" id="passwordModal">
         <div class="modal-content">
             <span class="modal-close" onclick="closePasswordModal()">&times;</span>
@@ -252,9 +268,8 @@
         var supabaseClient = null;
         
         var fetchedPostsCache = []; 
-        var activePostComments = []; // 현재 보고 있는 글의 댓글 저장소
         var editTargetPostId = null; 
-        var currentOpenedPostId = null; // 현재 상세보기 중인 글 ID
+        var activeDetailPostId = null; // 현재 상세하게 들여다보고 있는 글의 고유 ID 보관용 변수
 
         var currentPage = 1;
         var postsPerPage = 10;
@@ -296,12 +311,8 @@
             if (!supabaseClient) return;
             try {
                 const { data: dataSession } = await supabaseClient.auth.getSession();
-                
                 if (!dataSession || !dataSession.session) {
-                    myRole = 'GUEST';
-                    myEmail = 'unknown';
-                    updateUserUI();
-                    return;
+                    myRole = 'GUEST'; myEmail = 'unknown'; updateUserUI(); return;
                 }
 
                 if (dataSession && dataSession.session && dataSession.session.user) {
@@ -387,20 +398,17 @@
                     if (window.localStorage) localStorage.setItem('reasn_user_name', newNick);
                     document.getElementById('myProfileCard').style.display = 'none'; 
                     updateUserUI(); displayPosts(); 
-                    if(currentOpenedPostId) loadPostDetailView(currentOpenedPostId); // 상세창 열려있으면 동기화
+                    if(currentOpenedPostId) loadPostDetailView(currentOpenedPostId); 
                 }
             } catch(e) { alert('처리 중 오류가 발생했습니다.'); }
         }
 
         function switchToWriteView() {
             if (myRole === 'GUEST') {
-                alert('🔒 글 작성은 로그인 후 회원만 가능합니다.');
-                window.location.href = 'index.html';
-                return;
+                alert('🔒 글 작성은 로그인 후 회원만 가능합니다.'); window.location.href = 'index.html'; return;
             }
             if (currentCategory === '익명게시판' && myRole !== 'VIP' && myRole !== 'ADMIN') {
-                alert('🔒 익명게시판은 VIP 등급 전용 공간입니다.');
-                return;
+                alert('🔒 익명게시판은 VIP 등급 전용 공간입니다.'); return;
             }
             editTargetPostId = null;
             writeTargetCategory = currentCategory; 
@@ -411,24 +419,18 @@
             var ck = document.getElementById('postIsNotice');
             if(ck) ck.checked = false;
 
-            hideAllSections();
+            document.getElementById('listModeSection').style.display = 'none';
+            document.getElementById('detailModeSection').style.display = 'none';
             document.getElementById('writeModeSection').style.display = 'flex';
             window.scrollTo({ top: 0 });
         }
 
         function switchToListView() {
             editTargetPostId = null;
-            currentOpenedPostId = null;
-            hideAllSections();
-            document.getElementById('listModeSection').style.display = 'block';
-            window.scrollTo({ top: 0 });
-            displayPosts(); // 리스트 정보 최신화 리로드
-        }
-
-        function hideAllSections() {
-            document.getElementById('listModeSection').style.display = 'none';
             document.getElementById('writeModeSection').style.display = 'none';
             document.getElementById('detailModeSection').style.display = 'none';
+            document.getElementById('listModeSection').style.display = 'block';
+            window.scrollTo({ top: 0 });
         }
 
         function resetToHome() {
@@ -452,8 +454,7 @@
                 if (error) alert('등업 실패: ' + error.message);
                 else {
                     alert('🎉 VIP 등급으로 등업 완료!');
-                    myRole = 'VIP';
-                    localStorage.setItem('reasn_user_role', 'VIP');
+                    myRole = 'VIP'; localStorage.setItem('reasn_user_role', 'VIP');
                     updateUserUI(); displayPosts();
                 }
             } catch(e) { alert('오류 발생'); }
@@ -467,7 +468,6 @@
             });
         }
 
-         Zion
         function openPasswordModal() { 
             if(myRole === 'GUEST') return;
             document.getElementById('myProfileCard').style.display = 'none'; 
@@ -533,11 +533,7 @@
                         .eq('id', editTargetPostId);
                         
                     if (error) alert('수정 실패: ' + error.message);
-                    else { 
-                        alert('글 수정이 완료되었습니다.');
-                        currentOpenedPostId = editTargetPostId;
-                        loadPostDetailView(editTargetPostId); // 수정 완료 후 다시 상세보기 화면 진입
-                    }
+                    else { loadPostDetailView(editTargetPostId); }
                 } catch(e){ alert('수정 처리 오류'); }
             } else {
                 let displayAuthor = myName;
@@ -669,7 +665,6 @@
 
                 var newPost = document.createElement('div');
                 newPost.className = 'post';
-                
                 if (post.is_notice === true) newPost.style.backgroundColor = '#fcfcfc';
                 else if (post.is_hidden === true) newPost.style.backgroundColor = '#fff6e6';
 
@@ -713,7 +708,6 @@
             }
         }
 
-        // 🔒 [보안 방어벽 및 화면 전환 트랩 인터셉터]
         function handlePostClick(postId) {
             if (myRole === 'GUEST') {
                 alert('🔒 게시글 내용과 댓글은 로그인한 회원만 열람할 수 있습니다. 먼저 로그인해 주세요!');
@@ -724,12 +718,10 @@
                 alert('🔒 익명게시판의 글 내용과 댓글은 VIP 등급만 열람할 수 있습니다. 자유게시판에서 포인트를 쌓아 등업해 주세요!');
                 return; 
             }
-            
-            // 검증 통과 시 전용 상세보기 단독 페이지 로드 진행
             loadPostDetailView(postId);
         }
 
-        // 👁️ [핵심 추가] 글 상세 정보 단독 데이터 조회 및 렌더링 함수
+        // 👁️ [개정 및 보완 완료] 단독 상세보기 로드 시 하단 서브 이야기 리스트 조립 로직 연동
         async function loadPostDetailView(postId) {
             currentOpenedPostId = postId;
             hideAllSections();
@@ -745,14 +737,12 @@
             document.getElementById('dtCommentSection').innerHTML = '댓글 로딩 중...';
 
             try {
-                // 1. 해당 게시글 데이터 실시간 단건 추출
                 const { data: post, error } = await supabaseClient.from('reasn_posts').select('*').eq('id', postId).single();
                 if(error || !post) {
                     document.getElementById('dtPostTitle').innerText = '존재하지 않거나 삭제된 게시글입니다.';
                     return;
                 }
 
-                // 2. 상단 글 영역 렌더링
                 let tabularLabel = post.is_hidden === true ? '[숨김보관] ' : '';
                 document.getElementById('dtPostTitle').innerText = tabularLabel + (post.title || '제목 없음');
                 
@@ -765,7 +755,6 @@
                 
                 let timeStr = post.created_at ? new Date(post.created_at).toLocaleString('ko-KR') : '';
                 
-                // 관리자용 등업 유도 트리거 포함 처리
                 let authorClickAttr = (myRole === 'ADMIN' && post.user_email && post.user_email !== 'unknown' && postRole === 'USER')
                     ? `class="clickable-author can-upgrade" onclick="adminUpgradeUser('${post.user_email}', '${post.user_name}')"` : `class="clickable-author"`;
 
@@ -777,7 +766,6 @@
 
                 document.getElementById('dtPostContent').innerHTML = convertLinks(post.content);
 
-                // 3. 권한별 수정 / 삭제 / 공지 제어 단추 조립
                 var btnGroup = document.getElementById('dtActionButtons');
                 btnGroup.innerHTML = '';
                 
@@ -799,15 +787,84 @@
                 if(btnGroup.innerHTML === '') btnGroup.style.display = 'none';
                 else btnGroup.style.display = 'flex';
 
-                // 4. 해당 글 전용 댓글 실시간 조회 및 출력
                 await reloadCommentsArea(postId);
+
+                // 📑 [사양 전면 추가 반영]: 상세보기 폼 최하단 영역에 관련 카테고리 글 목록 엮어 출력하기
+                renderDetailSubListSection();
 
             } catch(e) {
                 document.getElementById('dtPostTitle').innerText = '서버 통신 오류가 발생했습니다.';
             }
         }
 
-        // 💬 현재 글의 댓글 구역만 쏙 부분 리로드하는 함수
+        // 📑 [핵심 함수 가미]: 상세보기 하단에 연달아 붙는 심플 서브 리스트 빌더
+        async function renderDetailSubListSection() {
+            // 이미 하단에 요소가 있다면 중복 생성을 방지하기 위해 노드 클리어 처리 후 진입
+            var oldSubArea = document.getElementById('dtSubListContainerArea');
+            if(oldSubArea) oldSubArea.remove();
+
+            var subListWrapper = document.createElement('div');
+            subListWrapper.id = 'dtSubListContainerArea';
+            subListWrapper.className = 'detail-sub-list-wrapper';
+            
+            subListWrapper.innerHTML = `<div class="sub-list-title">📌 [${currentCategory}]의 다른 이야기들</div>`;
+            
+            var subBoardBox = document.createElement('div');
+            subBoardBox.className = 'post-list-wrapper';
+
+            // 캐시에 보관되어 있는 동종 카테고리 리스트 데이터에서 가볍게 상위 목록들을 매핑해 뿌림
+            if(fetchedPostsCache && fetchedPostsCache.length > 0) {
+                
+                // 댓글 숫자 실시간 연산을 위해 댓글 카운트 트래픽 한 번 더 연산 유도
+                let allComments = [];
+                try {
+                    const { data: commentsData } = await supabaseClient.from('reasn_comments').select('post_id');
+                    if (commentsData) allComments = commentsData;
+                } catch(cErr) {}
+
+                fetchedPostsCache.forEach(post => {
+                    var commentCount = allComments.filter(c => c.post_id == post.id).length;
+                    
+                    var subPostRow = document.createElement('div');
+                    subPostRow.className = 'post';
+                    
+                    // 만약 현재 유저가 상세하게 소리내어 읽고 있는 글과 동일하다면 연한 회색으로 가이드 강조 처리
+                    if(post.id === currentOpenedPostId) {
+                        subPostRow.style.backgroundColor = '#fafafa';
+                        subPostRow.style.borderLeft = '3px solid #111';
+                    } else if (post.is_notice === true) {
+                        subPostRow.style.backgroundColor = '#fcfcfc';
+                    } else if (post.is_hidden === true) {
+                        subPostRow.style.backgroundColor = '#fff6e6';
+                    }
+
+                    subPostRow.setAttribute('onclick', `handlePostClick(${post.id})`);
+
+                    var subNoticeLabel = post.is_notice === true ? '<span style="font-weight:bold; color:#ff3b30; margin-right:8px;">[공지]</span>' : `<span class="post-num">${post.local_num}</span>`;
+                    var activeCheckArrow = post.id === currentOpenedPostId ? ' <span style="font-size:11px; color:#aaa; font-weight:normal; margin-left:5px;">(지금 읽는 중)</span>' : '';
+
+                    subPostRow.innerHTML = `
+                        <div class="post-header">
+                            <div class="post-title-line" style="font-size:14px;">
+                                ${subNoticeLabel}
+                                <span style="${post.id === currentOpenedPostId ? 'font-weight:bold; color:#111;' : 'font-weight:500; color:#444;'}">${post.title || '제목 없음'}<span class="comment-count-badge">(${commentCount})</span>${activeCheckArrow}</span>
+                            </div>
+                            <div class="post-meta-line" style="font-size:11px; color:#aaa;">
+                                <span>${post.user_name === '관리자' ? '관리자' : (currentCategory === '익명게시판' ? '익명' : post.user_name)}</span>
+                            </div>
+                        </div>
+                    `;
+                    subBoardBox.appendChild(subPostRow);
+                });
+                subListWrapper.appendChild(subBoardBox);
+            } else {
+                subListWrapper.innerHTML += `<p style="font-size:12px; color:#aaa; padding:10px 0;">가져올 목록이 없습니다.</p>`;
+            }
+
+            // 상세보기 컨테이너 하단 댓글 구역 바로 밑에 부착 유도
+            document.getElementById('detailModeSection').appendChild(subListWrapper);
+        }
+
         async function reloadCommentsArea(postId) {
             const commentSection = document.getElementById('dtCommentSection');
             if(!commentSection) return;
@@ -817,7 +874,6 @@
                 if(error) { commentSection.innerHTML = '댓글을 가져오지 못했습니다.'; return; }
 
                 commentSection.innerHTML = '';
-                
                 var commentList = document.createElement('div');
                 commentList.className = 'comment-list';
 
@@ -861,7 +917,6 @@
                 
                 commentSection.appendChild(commentList);
 
-                // 댓글 입력 인풋창 연결
                 var inputFlex = document.createElement('div');
                 inputFlex.className = 'comment-input-box';
                 inputFlex.innerHTML = `
@@ -870,7 +925,7 @@
                 `;
                 commentSection.appendChild(inputFlex);
 
-            } catch(ce) { commentSection.innerHTML = '댓글 렌더링 트래픽 지연'; }
+            } catch(ce) { commentSection.innerHTML = '댓글 렌더링 에러'; }
         }
 
         function switchToEditView(postId, oldTitle, isNoticeStatus) {
@@ -901,7 +956,10 @@
             try {
                 const { error } = await supabaseClient.from('reasn_posts').update({ is_notice: nextStatus }).eq('id', postId);
                 if (error) alert('공지 실패: ' + error.message);
-                else loadPostDetailView(postId);
+                else {
+                    await displayPosts(); // 내부 캐시 동기화 리로드
+                    loadPostDetailView(postId);
+                }
             } catch(e) { alert('오류 발생'); }
         }
 
@@ -913,7 +971,10 @@
             try {
                 const { error } = await supabaseClient.from('reasn_comments').update({ content: newText.trim() }).eq('id', commentId);
                 if (error) alert('댓글 수정 실패: ' + error.message);
-                else if(currentOpenedPostId) reloadCommentsArea(currentOpenedPostId);
+                else if(currentOpenedPostId) {
+                    await reloadCommentsArea(currentOpenedPostId);
+                    renderDetailSubListSection(); // 포인트 갱신 목적으로 하단 리스트 서브 레이아웃도 리프레시
+                }
             } catch(e) { alert('오류 발생'); }
         }
 
@@ -923,7 +984,10 @@
             try {
                 const { error } = await supabaseClient.from('reasn_comments').delete().eq('id', commentId);
                 if (error) alert('댓글 삭제 실패: ' + error.message);
-                else if(currentOpenedPostId) reloadCommentsArea(currentOpenedPostId);
+                else if(currentOpenedPostId) {
+                    await reloadCommentsArea(currentOpenedPostId);
+                    renderDetailSubListSection();
+                }
             } catch(e) { alert('오류 발생'); }
         }
 
@@ -934,7 +998,10 @@
             try {
                 const { error } = await supabaseClient.from('reasn_posts').update({ is_hidden: nextStatus }).eq('id', postId);
                 if (error) alert('숨김 실패: ' + error.message);
-                else loadPostDetailView(postId);
+                else {
+                    await displayPosts();
+                    loadPostDetailView(postId);
+                }
             } catch(e) { alert('오류 발생'); }
         }
 
@@ -974,9 +1041,7 @@
         async function saveComment(postId) {
             if(!supabaseClient) return;
             if(myRole === 'GUEST') {
-                alert('🔒 댓글 작성은 로그인 후 이용 가능합니다.');
-                window.location.href = 'index.html';
-                return;
+                alert('🔒 댓글 작성은 로그인 후 이용 가능합니다.'); window.location.href = 'index.html'; return;
             }
             var input = document.getElementById('dtReplyInput');
             var text = input ? input.value.trim() : "";
@@ -995,6 +1060,7 @@
                 else {
                     if(input) input.value = '';
                     await reloadCommentsArea(postId);
+                    renderDetailSubListSection(); // 댓글 수 실시간 미러링 동기화
                 }
             } catch(e){}
         }
@@ -1003,8 +1069,7 @@
             try {
                 if(supabaseClient) await supabaseClient.auth.signOut();
                 if(window.localStorage) localStorage.clear(); 
-                alert('로그아웃 되었습니다.');
-                window.location.href = 'index.html';
+                alert('로그아웃 되었습니다.'); window.location.href = 'index.html';
             } catch(e){ window.location.href = 'index.html'; }
         }
     </script>
