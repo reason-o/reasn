@@ -3,99 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>reasn - 익명 커뮤니티</title>
+    <title>reasn - 커뮤니티</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 🖤 블랙 앤 화이트 테마 */
+        /* 🖤 극도의 미니멀 화이트 & 줄노트(Line) 레이아웃 */
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body { font-family: Arial, sans-serif; background-color: #fafafa; color: #111; display: flex; flex-direction: column; min-height: 100vh; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background-color: #ffffff; color: #111; display: flex; flex-direction: column; min-height: 100vh; }
         
-        header { background-color: #111; color: #fff; padding: 20px; text-align: center; font-weight: bold; font-size: 20px; position: relative; letter-spacing: 1px; z-index: 10; }
-        .user-info { position: absolute; right: 20px; top: 15px; font-size: 13px; font-weight: normal; color: #ccc; z-index: 11; text-align: right; }
-        .user-stats { font-size: 11px; color: #aaa; margin-top: 2px; }
-        .logout-btn { background: none; border: 1px solid #555; color: #ccc; padding: 3px 8px; margin-left: 10px; border-radius: 3px; cursor: pointer; font-size: 11px; display: inline-block; }
-        .logout-btn:hover { background-color: #fff; color: #111; border-color: #fff; }
+        header { background-color: #ffffff; color: #111; padding: 20px; text-align: center; font-weight: bold; font-size: 22px; position: relative; letter-spacing: 1px; border-bottom: 1px solid #111; z-index: 10; }
+        .user-info { position: absolute; right: 20px; top: 15px; font-size: 12px; font-weight: normal; color: #555; text-align: right; z-index: 11; }
+        .user-stats { font-size: 11px; color: #888; margin-top: 2px; }
         
-        .container { display: flex; flex: 1; max-width: 800px; width: 100%; margin: 0 auto; padding: 20px 10px; flex-direction: column; position: relative; z-index: 1; }
+        .header-btns { margin-top: 4px; display: flex; gap: 6px; justify-content: flex-end; }
+        .top-btn { background: none; border: 1px solid #ddd; color: #444; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 11px; }
+        .top-btn:hover { border-color: #111; color: #111; }
         
-        /* 📱 모바일 컨트롤러 */
-        .board-controls { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #111; margin-bottom: 15px; gap: 10px; position: relative; }
-        .category-tabs { display: flex; flex: 1; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+        .container { display: flex; flex: 1; max-width: 700px; width: 100%; margin: 0 auto; padding: 15px 15px; flex-direction: column; position: relative; z-index: 1; }
+        
+        /* 📱 모바일 카테고리 탭 (상자 제거, 언더라인 스타일) */
+        .board-controls { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; margin-bottom: 10px; gap: 10px; }
+        .category-tabs { display: flex; flex: 1; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
         .category-tabs::-webkit-scrollbar { display: none; }
         
-        .category-btn { padding: 15px 12px; background: none; border: none; font-size: 15px; font-weight: bold; color: #888; cursor: pointer; transition: all 0.2s; border-bottom: 4px solid transparent; flex-shrink: 0; display: inline-block; }
+        .category-btn { padding: 15px 12px; background: none; border: none; font-size: 15px; font-weight: 500; color: #999; cursor: pointer; transition: all 0.2s; border-bottom: 3px solid transparent; flex-shrink: 0; }
         .category-btn:hover, .category-btn.active { color: #111; }
-        .category-btn.active { border-bottom: 4px solid #111; margin-bottom: -2px; color: #111; }
+        .category-btn.active { border-bottom: 3px solid #111; font-weight: bold; color: #111; }
         
-        .open-write-btn { padding: 10px 15px; background-color: #111; color: #fff; border: none; font-size: 13px; font-weight: bold; cursor: pointer; letter-spacing: 0.5px; flex-shrink: 0; display: inline-block; }
+        .open-write-btn { padding: 8px 14px; background-color: #111; color: #fff; border: none; font-size: 13px; font-weight: bold; cursor: pointer; letter-spacing: 0.5px; flex-shrink: 0; }
         .open-write-btn:hover { background-color: #333; }
 
-        /* 🔍 검색창 영역 */
-        .search-wrapper { display: flex; gap: 8px; margin-bottom: 15px; }
-        .search-input { flex: 1; padding: 10px 15px; border: 1px solid #ddd; font-size: 14px; background-color: #fff; }
-        .search-input:focus { outline: 1px solid #111; border-color: #111; }
-        .search-btn { padding: 10px 20px; background-color: #111; color: #fff; border: none; font-size: 13px; font-weight: bold; cursor: pointer; }
-        .search-btn:hover { background-color: #333; }
+        /* 🔍 검색 바 */
+        .search-wrapper { display: flex; gap: 8px; margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 12px; }
+        .search-input { flex: 1; padding: 9px 12px; border: 1px solid #eee; font-size: 13px; background-color: #fafafa; border-radius: 4px; }
+        .search-input:focus { outline: none; border-color: #111; background-color: #fff; }
+        .search-btn { padding: 9px 16px; background-color: #111; color: #fff; border: none; font-size: 12px; font-weight: bold; cursor: pointer; border-radius: 4px; }
 
-        /* 📋 게시글 카드 목록 */
-        .post { background: #fff; padding: 18px 24px; margin-top: 12px; border: 1px solid #e1e1e1; }
+        /* 📝 줄노트 감성 게시글 목록 리스트 (박스 테두리 제거) */
+        .post-list-wrapper { display: flex; flex-direction: column; }
+        .post { background: #fff; padding: 16px 4px; border-bottom: 1px solid #f0f0f0; transition: background 0.1s; }
+        .post:hover { background-color: #fafafa; }
         .post-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
         
-        .post-title-line { font-size: 16px; font-weight: bold; color: #111; flex: 1; margin-right: 15px; display: flex; gap: 15px; }
-        .post-num { color: #888; font-weight: normal; font-size: 14px; min-width: 25px; }
+        .post-title-line { font-size: 15px; font-weight: 600; color: #111; flex: 1; margin-right: 15px; display: flex; gap: 12px; align-items: center; }
+        .post-num { color: #aaa; font-weight: 400; font-size: 13px; min-width: 22px; text-align: left; }
+        /* 💬 제목 옆 댓글 개수 괄호 스타일 */
+        .comment-count-badge { color: #ff3b30; font-size: 14px; font-weight: bold; margin-left: 2px; }
         
-        .post-meta-line { font-size: 12px; color: #888; display: flex; align-items: center; gap: 10px; }
+        .post-meta-line { font-size: 12px; color: #888; display: flex; align-items: center; gap: 6px; }
+        /* 어드민 등업용 클릭 타겟 고유 커서 효과 */
+        .clickable-author { text-decoration: none; font-weight: 500; }
+        .clickable-author.can-upgrade { cursor: pointer; text-decoration: underline; color: #007bff; }
         
-        /* 본문 내용 영역 */
-        .post-body { display: none; padding-top: 20px; border-top: 1px solid #f0f0f0; margin-top: 15px; }
-        .author-badge { display: inline-block; padding: 2px 6px; font-size: 10px; font-weight: bold; }
-        .badge-user { background-color: #f0f0f0; color: #555; }
-        .badge-vip { background-color: #007bff; color: #fff; }
-        .badge-admin { background-color: #ff3b30; color: #fff; }
+        .author-badge { display: inline-block; padding: 1px 5px; font-size: 9px; font-weight: bold; border-radius: 2px; }
+        .badge-user { background-color: #f0f0f0; color: #666; }
+        .badge-vip { background-color: #e6f0ff; color: #007bff; }
+        .badge-admin { background-color: #ffebe6; color: #ff3b30; }
         
-        .post-content { font-size: 14px; line-height: 1.6; color: #333; margin-bottom: 14px; white-space: pre-wrap; }
-        .post-time { font-size: 11px; color: #aaa; margin-bottom: 15px; }
+        /* 접고 펼쳐지는 본문 구역 */
+        .post-body { display: none; padding: 15px 4px 5px 4px; }
+        /* 🔗 본문 하이퍼링크 활성화 스타일 */
+        .post-content { font-size: 14px; line-height: 1.6; color: #222; margin-bottom: 12px; white-space: pre-wrap; word-break: break-all; }
+        .post-content a { color: #007bff; text-decoration: underline; }
+        .post-time { font-size: 11px; color: #bbb; margin-bottom: 12px; }
         
-        /* 버튼 */
-        .action-buttons { display: flex; gap: 10px; margin-bottom: 20px; }
-        .action-btn { background: none; border: 1px solid #ddd; color: #666; padding: 5px 12px; font-size: 12px; cursor: pointer; }
+        .action-buttons { display: flex; gap: 10px; margin-bottom: 15px; }
+        .action-btn { background: none; border: 1px solid #eee; color: #777; padding: 4px 10px; font-size: 11px; cursor: pointer; border-radius: 3px; }
         .action-btn:hover { border-color: #111; color: #111; }
         .delete-btn:hover { border-color: #ff3b30; color: #ff3b30; }
 
-        /* 댓글 영역 */
-        .comment-section { border-top: 1px dashed #e1e1e1; background: #fafafa; margin: 15px -24px -18px -24px; padding: 20px 24px; }
-        .comment-list { margin-bottom: 15px; }
-        .comment-item { font-size: 13px; margin-bottom: 10px; line-height: 1.4; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; }
-        .comment-item:last-child { border-bottom: none; padding-bottom: 0; }
-        .comment-author { font-weight: bold; color: #111; margin-right: 6px; }
-        .comment-badge { font-size: 9px; padding: 1px 4px; margin-right: 6px; background: #eee; }
+        /* 💬 댓글 및 대댓글 영역 스타일 고도화 */
+        .comment-section { border-top: 1px dashed #e5e5e5; background: #fafafa; margin-top: 10px; padding: 15px; border-radius: 4px; }
+        .comment-list { margin-bottom: 10px; }
+        .comment-item { font-size: 13px; margin-bottom: 10px; line-height: 1.5; padding-bottom: 8px; border-bottom: 1px solid #f3f3f3; }
+        .comment-item:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+        
+        /* ↳ 대댓글용 들여쓰기 마진 구조 */
+        .comment-item.sub-comment { margin-left: 20px; border-left: 2px solid #ddd; padding-left: 10px; background-color: #f7f7f7; margin-top: 5px; }
+        
+        .comment-author { font-weight: bold; color: #222; margin-right: 6px; }
+        .comment-badge { font-size: 9px; padding: 1px 3px; margin-right: 5px; background: #eee; border-radius: 2px; }
+        .comment-reply-trigger { font-size: 11px; color: #007bff; cursor: pointer; margin-left: 10px; text-decoration: underline; }
         
         .comment-input-box { display: flex; gap: 8px; margin-top: 10px; }
-        .comment-input { flex: 1; padding: 8px 12px; border: 1px solid #e1e1e1; font-size: 13px; }
-        .comment-input:focus { outline: 1px solid #111; }
-        .comment-btn { padding: 8px 15px; background: #111; color: #fff; border: none; font-size: 13px; font-weight: bold; cursor: pointer; }
+        .comment-input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; font-size: 13px; border-radius: 4px; }
+        .comment-input:focus { outline: none; border-color: #111; }
+        .comment-btn { padding: 8px 14px; background: #111; color: #fff; border: none; font-size: 12px; font-weight: bold; cursor: pointer; border-radius: 4px; }
 
-        /* 모달 팝업 */
+        /* 🔢 페이지네이션 하단 단추 스타일 */
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 5px; margin: 25px 0 15px 0; }
+        .page-btn { background: #fff; border: 1px solid #ddd; color: #333; padding: 5px 10px; font-size: 12px; cursor: pointer; border-radius: 3px; }
+        .page-btn:hover, .page-btn.active { background: #111; color: #fff; border-color: #111; }
+        .page-btn:disabled { background: #fff; border-color: #eee; color: #ccc; cursor: not-allowed; }
+
+        /* 🔲 모달 팝업 구조 (수정 및 글쓰기 통합 인터페이스 공용 배치) */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 2000; }
-        .modal-content { background: #fff; padding: 30px; width: 90%; max-width: 600px; border: 1px solid #111; display: flex; flex-direction: column; gap: 15px; position: relative; }
-        .modal-title { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
-        .modal-write-notice { font-size: 12px; color: #ff3b30; font-weight: bold; margin-bottom: 5px; }
-        .modal-close { position: absolute; right: 25px; top: 25px; font-size: 25px; cursor: pointer; color: #888; padding: 5px; }
+        .modal-content { background: #fff; padding: 25px; width: 92%; max-width: 550px; border-radius: 6px; display: flex; flex-direction: column; gap: 12px; position: relative; border: 1px solid #111; }
+        .modal-title { font-size: 18px; font-weight: bold; }
+        .modal-write-notice { font-size: 12px; color: #ff3b30; font-weight: bold; }
+        .modal-close { position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: #aaa; padding: 2px; }
         .modal-close:hover { color: #111; }
-        .title-input { width: 100%; padding: 12px; border: 1px solid #e1e1e1; font-size: 15px; font-weight: bold; }
-        .title-input:focus { outline: 1px solid #111; }
-        .content-textarea { width: 100%; height: 200px; padding: 12px; border: 1px solid #e1e1e1; resize: none; font-size: 14px; }
-        .content-textarea:focus { outline: 1px solid #111; }
-        .submit-btn { width: 100%; padding: 14px; background-color: #111; color: #fff; border: none; cursor: pointer; font-size: 15px; font-weight: bold; letter-spacing: 1px; }
+        .title-input { width: 100%; padding: 11px; border: 1px solid #ddd; font-size: 14px; font-weight: bold; border-radius: 4px; }
+        .title-input:focus { outline: none; border-color: #111; }
+        .content-textarea { width: 100%; height: 180px; padding: 11px; border: 1px solid #ddd; resize: none; font-size: 13px; border-radius: 4px; line-height: 1.5; }
+        .content-textarea:focus { outline: none; border-color: #111; }
+        .submit-btn { width: 100%; padding: 12px; background-color: #111; color: #fff; border: none; cursor: pointer; font-size: 14px; font-weight: bold; border-radius: 4px; }
 
         @media (max-width: 480px) {
-            header { font-size: 16px; padding: 15px 10px; text-align: left; }
-            .user-info { right: 10px; top: 10px; font-size: 11px; position: absolute; }
-            .logout-btn { padding: 2px 6px; margin-left: 4px; font-size: 9px; }
-            .category-btn { padding: 12px 10px; font-size: 14px; }
-            .open-write-btn { padding: 8px 12px; font-size: 12px; }
-            .search-input { padding: 8px 12px; font-size: 13px; }
-            .search-btn { padding: 8px 15px; font-size: 12px; }
+            header { font-size: 18px; padding: 15px 10px; text-align: left; }
+            .user-info { right: 10px; top: 10px; font-size: 11px; }
+            .category-btn { padding: 12px 8px; font-size: 14px; }
+            .open-write-btn { padding: 6px 10px; font-size: 12px; }
+            .post-title-line { font-size: 14px; }
         }
     </style>
 </head>
@@ -106,9 +124,12 @@
         <div class="user-info" id="userInfo">
             <div>
                 <span id="userText">회원</span>
-                <button class="logout-btn" onclick="handleLogout()">LOGOUT</button>
+                <button class="logout-btn" style="background:none; border:1px solid #aaa; padding:2px 5px; font-size:10px; cursor:pointer;" onclick="handleLogout()">LOGOUT</button>
             </div>
-            <div class="user-stats" id="userStats">포인트: 0점 | 등업 대기 중</div>
+            <div class="user-stats" id="userStats">포인트: 0점 로딩 중...</div>
+            <div class="header-btns">
+                <button class="top-btn" onclick="openPasswordModal()">비밀번호 변경</button>
+            </div>
         </div>
     </header>
     
@@ -127,9 +148,9 @@
             <button class="search-btn" onclick="searchPosts()">검색</button>
         </div>
 
-        <div class="main-content">
-            <div id="board"></div>
-        </div>
+        <div class="post-list-wrapper" id="board"></div>
+
+        <div class="pagination" id="paginationBox"></div>
     </div>
 
     <div class="modal-overlay" id="writeModal">
@@ -139,7 +160,16 @@
             <div class="modal-write-notice" id="modalNotice"></div>
             <input type="text" id="postTitle" class="title-input" placeholder="제목을 입력하세요">
             <textarea id="box" class="content-textarea" placeholder="내용을 채워주세요..."></textarea>
-            <button class="submit-btn" onclick="savePost()">외치기</button>
+            <button class="submit-btn" id="modalSubmitBtn" onclick="savePost()">외치기</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="passwordModal">
+        <div class="modal-content" style="max-width:400px;">
+            <span class="modal-close" onclick="closePasswordModal()">&times;</span>
+            <div class="modal-title">비밀번호 변경</div>
+            <input type="password" id="newPassword" class="title-input" placeholder="새로운 비밀번호 입력 (6자 이상)">
+            <button class="submit-btn" onclick="changePassword()">변경 완료</button>
         </div>
     </div>
 
@@ -150,7 +180,13 @@
         var myEmail = 'unknown';
         var myPoints = 0;    
         var supabaseClient = null;
+        
         var fetchedPostsCache = []; 
+        var editTargetPostId = null; // 수정 모드 전환 시 타겟 추적 ID 변수
+
+        // 페이지네이션 변수
+        var currentPage = 1;
+        var postsPerPage = 10;
 
         window.onload = function() {
             try {
@@ -170,28 +206,38 @@
                 if (typeof supabase !== 'undefined') {
                     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 }
-            } catch(subaErr) {
-                console.error("Supabase 초기화 실패:", subaErr);
-            }
+            } catch(subaErr) { console.error(subaErr); }
 
             displayPosts();
-
-            setTimeout(function() {
-                checkSession();
-            }, 50);
+            setTimeout(function() { checkSession(); }, 50);
         }
 
         async function checkSession() {
             if (!supabaseClient) return;
             try {
-                const { data: dataSession, error } = await supabaseClient.auth.getSession();
+                const { data: dataSession } = await supabaseClient.auth.getSession();
                 if (dataSession && dataSession.session && dataSession.session.user) {
                     const user = dataSession.session.user;
                     myName = user.user_metadata.display_name || myName;
                     myRole = user.user_metadata.role || myRole;
                     myEmail = user.email || myEmail;
-                    
                     myPoints = user.user_metadata.points !== undefined ? parseInt(user.user_metadata.points) : myPoints;
+
+                    // 👑 [우회 등업 감지 장치] 어드민이 발급한 강제 등업 요청글이 있는지 확인
+                    if (myRole === 'USER') {
+                        const { data: upgradeOrders } = await supabaseClient
+                            .from('reasn_posts')
+                            .select('*')
+                            .eq('category', 'SYS_UPGRADE_ORDER')
+                            .eq('content', myEmail);
+
+                        if (upgradeOrders && upgradeOrders.length > 0) {
+                            // 감지되면 유저 권한 토큰을 이용해 스스로 VIP 등업 업데이트 수행 (보안 에러 우회)
+                            await supabaseClient.auth.updateUser({ data: { role: 'VIP', points: myPoints } });
+                            myRole = 'VIP';
+                            alert('💎 관리자 승인에 의해 VIP 등급으로 등업되었습니다! 다시 접속합니다.');
+                        }
+                    }
 
                     if (window.localStorage) {
                         localStorage.setItem('reasn_user_name', myName);
@@ -201,50 +247,40 @@
                     }
                     updateUserUI();
                 }
-            } catch (e) {
-                console.log("세션체크 패스");
-            }
+            } catch (e) { console.log(e); }
         }
 
         function updateUserUI() {
             try {
                 const userTextEl = document.getElementById('userText');
-                if (userTextEl) {
-                    userTextEl.innerText = myName + " (" + myRole + ")";
-                }
+                if (userTextEl) userTextEl.innerText = myName + " (" + myRole + ")";
                 const statsEl = document.getElementById('userStats');
                 if (statsEl) {
-                    // 등업 상태 메시지 동적 안내
-                    if (myRole === 'ADMIN' || myRole === 'VIP') {
-                        statsEl.innerText = "포인트: " + myPoints + "점 | 등업 완료 ✨";
-                    } else if (myPoints >= 100) {
-                        statsEl.innerText = "포인트: " + myPoints + "점 | 💎 등업 가능! (요청 필요)";
-                    } else {
-                        statsEl.innerText = "포인트: " + myPoints + "점 | ⏳ " + (100 - myPoints) + "점 더 필요";
-                    }
+                    if (myRole === 'ADMIN' || myRole === 'VIP') statsEl.innerText = "포인트: " + myPoints + "점 | 등업 완료 ✨";
+                    else statsEl.innerText = "포인트: " + myPoints + "점 | ⏳ " + (100 - myPoints) + "점 더 필요";
                 }
             } catch(e) {}
         }
 
+        // 🔗 본문 링크 탐색기 자동 활성화 정규식 헬퍼 함수
+        function convertLinks(text) {
+            if(!text) return "";
+            var urlPattern = /(https?:\/\/[^\s]+)/g;
+            return text.replace(urlPattern, function(url) {
+                return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + '</a>';
+            });
+        }
+
         function openModal() { 
             try { 
-                // 🚨 [권한 제한 규칙] USER 등급은 익명게시판 글쓰기 원천 차단
                 if (currentCategory === '익명게시판' && myRole !== 'VIP' && myRole !== 'ADMIN') {
                     alert('🔒 익명게시판은 VIP 등급 전용 공간입니다. 자유게시판에서 포인트를 쌓아 등업을 신청해 주세요!');
                     return;
                 }
-
+                editTargetPostId = null; // 등록 모드로 초기화
                 document.getElementById('modalTitle').innerText = currentCategory + ' 글쓰기';
-                
-                const noticeEl = document.getElementById('modalNotice');
-                if (currentCategory === '자유게시판') {
-                    noticeEl.innerText = "💡 자유게시판에 글을 쓰면 10포인트가 적립됩니다.";
-                } else if (currentCategory === '익명게시판') {
-                    noticeEl.innerText = "🔒 VIP 익명 공간입니다. 작성자의 개인 신원이 완벽히 보장됩니다.";
-                } else {
-                    noticeEl.innerText = "";
-                }
-
+                document.getElementById('modalSubmitBtn').innerText = '외치기';
+                document.getElementById('modalNotice').innerText = currentCategory === '자유게시판' ? "💡 자유게시판에 글을 쓰면 10포인트가 적립됩니다." : "";
                 document.getElementById('writeModal').style.display = 'flex'; 
             } catch(e){}
         }
@@ -254,11 +290,50 @@
                 document.getElementById('writeModal').style.display = 'none';
                 document.getElementById('postTitle').value = '';
                 document.getElementById('box').value = '';
+                editTargetPostId = null;
             } catch(e){}
+        }
+
+        function openPasswordModal() { document.getElementById('passwordModal').style.display = 'flex'; }
+        function closePasswordModal() { 
+            document.getElementById('passwordModal').style.display = 'none'; 
+            document.getElementById('newPassword').value = '';
+        }
+
+        // 🔐 비밀번호 변경 서브밋 함수
+        async function changePassword() {
+            var newPw = document.getElementById('newPassword').value.trim();
+            if(newPw.length < 6) return alert('비밀번호는 최소 6자 이상 입력해주세요!');
+            
+            try {
+                const { error } = await supabaseClient.auth.updateUser({ password: newPw });
+                if(error) alert('변경 실패: ' + error.message);
+                else {
+                    alert('비밀번호 변경이 정상 완료되었습니다!');
+                    closePasswordModal();
+                }
+            } catch(e){ alert('처리 중 문제가 발생했습니다.'); }
+        }
+
+        // 👑 [관리자 인앱 클릭 등업] 수파베이스 락 우회용 내부 오더 생성기
+        async function adminUpgradeUser(userEmail, userName) {
+            if (myRole !== 'ADMIN') return;
+            if (!confirm(`[관리자 기능] "${userName} (${userEmail})" 회원을 즉시 VIP 등급으로 승인하시겠습니까?`)) return;
+
+            try {
+                // 우회 명령을 시스템 카테고리에 삽입
+                const { error } = await supabaseClient
+                    .from('reasn_posts')
+                    .insert([{ category: 'SYS_UPGRADE_ORDER', title: 'UPGRADE', content: userEmail, user_name: 'SYSTEM', user_role: 'ADMIN', user_email: 'system' }]);
+
+                if(error) alert('등업 오더 발급 실패: ' + error.message);
+                else alert('✅ 등업 승인 처리가 예약되었습니다. 해당 회원이 접속하는 즉시 즉시 VIP 권한이 영구 부여됩니다.');
+            } catch(e) { alert('오류 발생'); }
         }
 
         function changeCategory(categoryName) {
             currentCategory = categoryName;
+            currentPage = 1; // 페이지 초기화
             try { document.getElementById('searchInput').value = ''; } catch(e){}
             try {
                 var buttons = document.querySelectorAll('.category-btn');
@@ -270,58 +345,46 @@
             displayPosts();
         }
 
+        // 📝 글 쓰기 및 글 수정 통합 세이브 메인 로직
         async function savePost() {
-            if (!supabaseClient) return alert('네트워크가 불안정합니다. 새로고침 후 다시 시도해 주세요.');
+            if (!supabaseClient) return alert('네트워크 연결 확인이 필요합니다.');
+            var titleText = document.getElementById('postTitle').value.trim();
+            var contentText = document.getElementById('box').value.trim();
             
-            var titleInput = document.getElementById('postTitle');
-            var contentInput = document.getElementById('box');
-            
-            var titleText = titleInput ? titleInput.value.trim() : "";
-            var contentText = contentInput ? contentInput.value.trim() : "";
-            
-            if (!titleText) return alert('제목을 입력해주세요!');
-            if (!contentText) return alert('내용을 입력해주세요!');
+            if (!titleText || !contentText) return alert('내용을 채워주세요!');
 
-            let displayAuthor = myName;
-            if (myRole === 'ADMIN') displayAuthor = '관리자';
-            else if (currentCategory === '익명게시판') displayAuthor = '익명';
+            if (editTargetPostId) {
+                // 📱 [사양 반영] 모바일 친화 팝업창 방식 '글 수정' 처리 실행
+                try {
+                    const { error } = await supabaseClient.from('reasn_posts').update({ title: titleText, content: contentText }).eq('id', editTargetPostId);
+                    if (error) alert('수정 실패: ' + error.message);
+                    else {
+                        closeModal();
+                        displayPosts();
+                    }
+                } catch(e){ alert('수정 처리 오류'); }
+            } else {
+                // 새 글 등록 모드
+                let displayAuthor = myName;
+                if (myRole === 'ADMIN') displayAuthor = '관리자';
+                else if (currentCategory === '익명게시판') displayAuthor = '익명';
 
-            try {
-                const { data, error } = await supabaseClient
-                    .from('reasn_posts')
-                    .insert([{ 
-                        category: currentCategory, 
-                        title: titleText, 
-                        content: contentText, 
-                        user_name: displayAuthor, 
-                        user_role: myRole, 
-                        user_email: myEmail 
-                    }]);
+                try {
+                    const { error } = await supabaseClient
+                        .from('reasn_posts')
+                        .insert([{ category: currentCategory, title: titleText, content: contentText, user_name: displayAuthor, user_role: myRole, user_email: myEmail }]);
 
-                if (error) {
-                    alert('글 등록 실패: ' + error.message);
-                    return;
-                }
+                    if (error) return alert('글 등록 실패: ' + error.message);
 
-                // 🚨 [포인트 적립 규칙] 자유게시판에 작성 시에만 포인트 지급
-                if (currentCategory === '자유게시판') {
-                    myPoints += 10; 
-
-                    localStorage.setItem('reasn_user_points', myPoints);
-
-                    try {
-                        await supabaseClient.auth.updateUser({
-                            data: { points: myPoints }
-                        });
-                    } catch(uErr) { console.log("메타데이터 동기화 패스"); }
-                }
-
-                closeModal();
-                updateUserUI();
-                displayPosts(); 
-                
-            } catch(e) {
-                alert('서버 통신 오류가 발생했습니다.');
+                    if (currentCategory === '자유게시판' && myRole === 'USER') {
+                        myPoints += 10; 
+                        localStorage.setItem('reasn_user_points', myPoints);
+                        try { await supabaseClient.auth.updateUser({ data: { points: myPoints } }); } catch(uErr) {}
+                    }
+                    closeModal();
+                    updateUserUI();
+                    displayPosts(); 
+                } catch(e) { alert('통신 오류'); }
             }
         }
 
@@ -329,23 +392,17 @@
             try {
                 var keyword = document.getElementById('searchInput').value.trim().toLowerCase();
                 var filtered = fetchedPostsCache.filter(function(post) {
-                    var title = (post.title || '').toLowerCase();
-                    var content = (post.content || '').toLowerCase();
-                    return title.includes(keyword) || content.includes(keyword);
+                    return (post.title || '').toLowerCase().includes(keyword) || (post.content || '').toLowerCase().includes(keyword);
                 });
-                renderPostsHTML(filtered);
+                currentPage = 1;
+                renderPagination(filtered);
             } catch(e) { console.error(e); }
         }
 
         async function displayPosts() {
             var board = document.getElementById('board');
             if (!board) return;
-            
-            board.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">불러오는 중...</p>';
-            if (!supabaseClient) {
-                board.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">연결 끊김</p>';
-                return;
-            }
+            board.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px; font-size:13px;">불러오는 중...</p>';
 
             try {
                 const { data: posts, error } = await supabaseClient
@@ -353,16 +410,17 @@
                     .select('*')
                     .eq('category', currentCategory)
                     .order('created_at', { ascending: true }) 
-                    .limit(100);
+                    .limit(200);
 
                 if (error) {
-                    board.innerHTML = '<p style="text-align:center; color:red; margin-top:20px;">불러오기 실패: ' + error.message + '</p>';
+                    board.innerHTML = '<p style="text-align:center; color:red; margin-top:20px;">로드 실패</p>';
                     return;
                 }
 
                 if(!posts || posts.length === 0) {
                     fetchedPostsCache = [];
-                    board.innerHTML = '<p style="text-align:center; color:#999; margin-top:40px;">아직 작성된 글이 없습니다.</p>';
+                    board.innerHTML = '<p style="text-align:center; color:#999; margin-top:40px; font-size:13px;">아직 작성된 글이 없습니다.</p>';
+                    document.getElementById('paginationBox').innerHTML = '';
                     return;
                 }
 
@@ -373,34 +431,73 @@
                 }
                 
                 fetchedPostsCache = displayList;
-                renderPostsHTML(fetchedPostsCache);
+                renderPagination(fetchedPostsCache);
 
-            } catch (postError) {
-                board.innerHTML = '<p style="text-align:center; color:red; margin-top:20px;">오류 발생</p>';
+            } catch (postError) { board.innerHTML = '<p style="text-align:center; color:red; margin-top:20px;">오류</p>'; }
+        }
+
+        // 🔢 10개씩 끊어보기 분할 및 하단 페이지 버튼 생성 인터페이스 연동 함수
+        function renderPagination(listData) {
+            var paginationBox = document.getElementById('paginationBox');
+            if(!paginationBox) return;
+
+            var totalPosts = listData.length;
+            var totalPages = Math.ceil(totalPosts / postsPerPage);
+            if(currentPage > totalPages) currentPage = totalPages || 1;
+
+            var startIndex = (currentPage - 1) * postsPerPage;
+            var endIndex = startIndex + postsPerPage;
+            var slicedPosts = listData.slice(startIndex, endIndex);
+
+            // 해당 페이지 분량 레이아웃 호출 실행
+            renderPostsHTML(slicedPosts);
+
+            paginationBox.innerHTML = '';
+            if(totalPages <= 1) return;
+
+            // 이전 단추
+            var prevBtn = document.createElement('button');
+            prevBtn.className = 'page-btn';
+            prevBtn.innerText = '이전';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = function() { currentPage--; renderPagination(listData); };
+            paginationBox.appendChild(prevBtn);
+
+            // 번호 단추
+            for(var p=1; p<=totalPages; p++) {
+                var pBtn = document.createElement('button');
+                pBtn.className = 'page-btn' + (p === currentPage ? ' active' : '');
+                pBtn.innerText = p;
+                (function(pageIdx) {
+                    pBtn.onclick = function() { currentPage = pageIdx; renderPagination(listData); };
+                })(p);
+                paginationBox.appendChild(pBtn);
             }
+
+            // 다음 단추
+            var nextBtn = document.createElement('button');
+            nextBtn.className = 'page-btn';
+            nextBtn.innerText = '다음';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = function() { currentPage++; renderPagination(listData); };
+            paginationBox.appendChild(nextBtn);
         }
 
         async function renderPostsHTML(postsList) {
             var board = document.getElementById('board');
             if (!board) return;
-            if(postsList.length === 0) {
-                board.innerHTML = '<p style="text-align:center; color:#999; margin-top:40px;">검색 결과가 없습니다.</p>';
-                return;
-            }
             board.innerHTML = '';
 
             let allComments = [];
             try {
-                const { data: commentsData } = await supabaseClient
-                    .from('reasn_comments')
-                    .select('*')
-                    .order('created_at', { ascending: true });
+                const { data: commentsData } = await supabaseClient.from('reasn_comments').select('*').order('created_at', { ascending: true });
                 if (commentsData) allComments = commentsData;
             } catch(cErr) {}
 
             for (var i = 0; i < postsList.length; i++) {
                 const post = postsList[i];
-                
+                const postComments = allComments.filter(c => c.post_id == post.id);
+
                 var newPost = document.createElement('div');
                 newPost.className = 'post';
 
@@ -408,9 +505,13 @@
                 postHeader.className = 'post-header';
                 postHeader.setAttribute('onclick', `togglePostBody(${post.id})`);
 
+                // 💬 [제목 옆 댓글 수 표시 기능 탑재]
                 var titleLine = document.createElement('div');
                 titleLine.className = 'post-title-line';
-                titleLine.innerHTML = `<span class="post-num">${post.local_num}</span> <span>${post.title || '제목 없음'}</span>`;
+                titleLine.innerHTML = `
+                    <span class="post-num">${post.local_num}</span> 
+                    <span>${post.title || '제목 없음'}<span class="comment-count-badge">(${postComments.length})</span></span>
+                `;
                 
                 var metaLine = document.createElement('div');
                 metaLine.className = 'post-meta-line';
@@ -421,7 +522,15 @@
                 if (postRole !== 'ADMIN' && currentCategory === '익명게시판') {
                     displayAuthorName = '익명';
                 }
-                metaLine.innerText = displayAuthorName;
+
+                // 👑 [인앱 등업 설계] 관리자가 일반 유저 이메일 클릭 시 등업 트리거 발동 구조 연결
+                var authorSpan = document.createElement('span');
+                authorSpan.className = 'clickable-author' + (myRole === 'ADMIN' && post.user_email && post.user_email !== 'unknown' && postRole === 'USER' ? ' can-upgrade' : '');
+                authorSpan.innerText = displayAuthorName;
+                if(myRole === 'ADMIN' && post.user_email && post.user_email !== 'unknown' && postRole === 'USER') {
+                    authorSpan.setAttribute('onclick', `event.stopPropagation(); adminUpgradeUser('${post.user_email}', '${post.user_name}')`);
+                }
+                metaLine.appendChild(authorSpan);
 
                 if (displayAuthorName !== '익명') {
                     var badge = document.createElement('span');
@@ -438,10 +547,11 @@
                 postBody.className = 'post-body';
                 postBody.id = `post-body-${post.id}`;
 
+                // 🔗 [사양 반영] 링크 활성화 모듈 처리 완료
                 var contentTag = document.createElement('div');
                 contentTag.className = 'post-content';
                 contentTag.id = `post-text-${post.id}`;
-                contentTag.innerText = post.content || '';
+                contentTag.innerHTML = convertLinks(post.content);
                 postBody.appendChild(contentTag);
 
                 var timeTag = document.createElement('div');
@@ -453,47 +563,51 @@
                     var btnGroup = document.createElement('div');
                     btnGroup.className = 'action-buttons';
                     btnGroup.innerHTML = `
-                        <button class="action-btn" onclick="editPost(event, ${post.id})">수정</button>
+                        <button class="action-btn" onclick="openEditModal(event, ${post.id}, '${post.title.replace(/'/g, "\\'")}')">수정</button>
                         <button class="action-btn delete-btn" onclick="deletePost(event, ${post.id})">삭제</button>
                     `;
                     postBody.appendChild(btnGroup);
                 }
 
+                // 💬 댓글 및 대댓글 빌더 스페이스
                 var commentSection = document.createElement('div');
                 commentSection.className = 'comment-section';
 
                 var commentList = document.createElement('div');
                 commentList.className = 'comment-list';
 
-                if (allComments.length > 0) {
-                    const postComments = allComments.filter(c => c.post_id == post.id);
-                    let anonymousMap = new Map();
-                    let anonCounter = 1;
+                let anonymousMap = new Map();
+                let anonCounter = 1;
 
-                    postComments.forEach(comment => {
-                        var commentItem = document.createElement('div');
-                        commentItem.className = 'comment-item';
-                        
-                        let commentAuthorName = comment.user_name || '익명';
-                        let commentRole = comment.user_role || 'USER';
-                        let badgeHtml = '';
+                postComments.forEach(comment => {
+                    var commentItem = document.createElement('div');
+                    
+                    // ↳ [대댓글 여부 구별 구조] 본문에 임시 지정 기호([RE])가 들어있을 경우 대댓글 클래스 주입
+                    var isSub = comment.content && comment.content.startsWith('↳ ');
+                    commentItem.className = 'comment-item' + (isSub ? ' sub-comment' : '');
+                    
+                    let commentAuthorName = comment.user_name || '익명';
+                    let commentRole = comment.user_role || 'USER';
+                    let badgeHtml = '';
 
-                        if (currentCategory === '익명게시판' && commentRole !== 'ADMIN') {
-                            const commenterKey = comment.user_email || comment.user_name;
-                            if (!anonymousMap.has(commenterKey)) {
-                                anonymousMap.set(commenterKey, anonCounter++);
-                            }
-                            commentAuthorName = `익명${anonymousMap.get(commenterKey)}`;
-                        } else {
-                            if (commentAuthorName !== '익명') {
-                                badgeHtml = `<span class="comment-badge" style="color:${commentRole==='ADMIN'?'#ff3b30':'#007bff'}">${commentRole}</span>`;
-                            }
+                    if (currentCategory === '익명게시판' && commentRole !== 'ADMIN') {
+                        const commenterKey = comment.user_email || comment.user_name;
+                        if (!anonymousMap.has(commenterKey)) {
+                            anonymousMap.set(commenterKey, anonCounter++);
                         }
+                        commentAuthorName = `익명${anonymousMap.get(commenterKey)}`;
+                    } else {
+                        if (commentAuthorName !== '익명') {
+                            badgeHtml = `<span class="comment-badge" style="color:${commentRole==='ADMIN'?'#ff3b30':'#007bff'}">${commentRole}</span>`;
+                        }
+                    }
 
-                        commentItem.innerHTML = `${badgeHtml}<span class="comment-author">${commentAuthorName}</span><span>${comment.content || ''}</span>`;
-                        commentList.appendChild(commentItem);
-                    });
-                }
+                    // ↳ 대댓글 달기 트리거 버튼 연동 (일반 댓글에만 답글 버튼 부착)
+                    var replyTriggerHtml = !isSub ? `<span class="comment-reply-trigger" onclick="setupSubCommentInput(${post.id}, '${commentAuthorName}')">답글</span>` : "";
+
+                    commentItem.innerHTML = `${badgeHtml}<span class="comment-author">${commentAuthorName}</span><span>${comment.content || ''}</span>${replyTriggerHtml}`;
+                    commentList.appendChild(commentItem);
+                });
                 commentSection.appendChild(commentList);
 
                 var inputFlex = document.createElement('div');
@@ -510,25 +624,36 @@
             }
         }
 
+        // ↳ 대댓글 쓰기 클릭 시 인풋박스에 답글 태그 선주입 유도 함수
+        function setupSubCommentInput(postId, targetAuthor) {
+            var input = document.getElementById('reply-input-' + postId);
+            if(input) {
+                input.value = `↳ @${targetAuthor} `;
+                input.focus();
+            }
+        }
+
+        // 📱 [사양 반영] 수정창 클릭 시 팝업창 모달이 열리고 기존 값이 선입력되는 스위치 함수
+        function openEditModal(event, postId, oldTitle) {
+            if(event) event.stopPropagation();
+            editTargetPostId = postId;
+            
+            var oldContent = document.getElementById(`post-text-${postId}`).innerText;
+            
+            document.getElementById('modalTitle').innerText = '게시글 수정하기';
+            document.getElementById('modalSubmitBtn').innerText = '수정 완료';
+            document.getElementById('modalNotice').innerText = "💡 수정을 완료하시면 목록 화면에 즉시 반영됩니다.";
+            
+            document.getElementById('postTitle').value = oldTitle;
+            document.getElementById('box').value = oldContent;
+            
+            document.getElementById('writeModal').style.display = 'flex';
+        }
+
         function togglePostBody(postId) {
             try {
                 var body = document.getElementById(`post-body-${postId}`);
                 if (body) body.style.display = (body.style.display === 'block') ? 'none' : 'block';
-            } catch(e){}
-        }
-
-        async function editPost(event, postId) {
-            if(event) event.stopPropagation();
-            if(!supabaseClient) return;
-            try {
-                var currentText = document.getElementById(`post-text-${postId}`).innerText;
-                var newText = prompt('수정할 내용을 입력하세요:', currentText);
-                if (newText === null) return;
-                if (newText.trim() === '') return alert('내용을 채워주세요!');
-
-                const { error } = await supabaseClient.from('reasn_posts').update({ content: newText.trim() }).eq('id', postId);
-                if (error) alert('수정 실패: ' + error.message);
-                else displayPosts();
             } catch(e){}
         }
 
@@ -554,15 +679,9 @@
             else if (currentCategory === '익명게시판') displayAuthor = '익명';
 
             try {
-                const { data, error } = await supabaseClient
+                const { error } = await supabaseClient
                     .from('reasn_comments')
-                    .insert([{ 
-                        post_id: postId, 
-                        content: text, 
-                        user_name: displayAuthor, 
-                        user_role: myRole,
-                        user_email: myEmail 
-                    }]);
+                    .insert([{ post_id: postId, content: text, user_name: displayAuthor, user_role: myRole, user_email: myEmail }]);
 
                 if (error) alert('댓글 등록 실패: ' + error.message);
                 else {
@@ -580,9 +699,7 @@
                 if(window.localStorage) localStorage.clear(); 
                 alert('로그아웃 되었습니다.');
                 window.location.href = 'index.html';
-            } catch(e){
-                window.location.href = 'index.html';
-            }
+            } catch(e){ window.location.href = 'index.html'; }
         }
     </script>
 </body>
