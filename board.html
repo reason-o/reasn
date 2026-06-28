@@ -10,14 +10,26 @@
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background-color: #ffffff; color: #111; display: flex; flex-direction: column; min-height: 100vh; }
         
+        /* 🤫 reasn 로고 클릭 링크 스타일 추가 */
         header { background-color: #ffffff; color: #111; padding: 20px; text-align: center; font-weight: bold; font-size: 22px; position: relative; letter-spacing: 1px; border-bottom: 1px solid #111; z-index: 10; }
-        .user-info { position: absolute; right: 20px; top: 15px; font-size: 12px; font-weight: normal; color: #555; text-align: right; z-index: 11; }
-        .user-stats { font-size: 11px; color: #888; margin-top: 2px; }
+        .logo-link { color: #111; text-decoration: none; cursor: pointer; }
+
+        /* 👤 우측 상단 내 정보 펼침(Dropdown) 카드 가미 */
+        .user-info-wrapper { position: absolute; right: 20px; top: 18px; z-index: 11; display: flex; flex-direction: column; align-items: flex-end; }
+        .my-profile-trigger { font-size: 13px; font-weight: 600; color: #111; cursor: pointer; background: #f5f5f5; padding: 4px 10px; border-radius: 20px; border: 1px solid #eee; transition: all 0.2s; }
+        .my-profile-trigger:hover { background: #111; color: #fff; border-color: #111; }
         
-        .header-btns { margin-top: 4px; display: flex; gap: 6px; justify-content: flex-end; }
-        .top-btn { background: none; border: 1px solid #ddd; color: #444; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 11px; }
+        /* 숨겨져 있다가 클릭 시 아래로 열리는 내 정보 박스 */
+        .my-profile-card { display: none; margin-top: 5px; background: #ffffff; border: 1px solid #111; padding: 15px; width: 220px; text-align: left; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-radius: 4px; }
+        .profile-row { font-size: 12px; color: #333; margin-bottom: 8px; line-height: 1.4; }
+        .profile-row strong { color: #111; }
+        
+        .header-btns { margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; display: flex; gap: 6px; justify-content: space-between; }
+        .top-btn { background: none; border: 1px solid #ddd; color: #444; padding: 3px 8px; border-radius: 3px; cursor: pointer; font-size: 11px; flex: 1; text-align: center; }
         .top-btn:hover { border-color: #111; color: #111; }
-        
+        .logout-btn { background: none; border: 1px solid #ff3b30; color: #ff3b30; }
+        .logout-btn:hover { background: #ff3b30; color: #fff; border-color: #ff3b30; }
+
         .container { display: flex; flex: 1; max-width: 700px; width: 100%; margin: 0 auto; padding: 15px 15px; flex-direction: column; position: relative; z-index: 1; }
         
         /* 📱 모바일 카테고리 탭 */
@@ -68,7 +80,7 @@
         .action-btn:hover { border-color: #111; color: #111; }
         .delete-btn:hover { border-color: #ff3b30; color: #ff3b30; }
         .hide-btn:hover { border-color: #ff9500; color: #ff9500; }
-        .move-btn:hover { border-color: #007bff; color: #007bff; } /* 이동 버튼 호버 스타일 */
+        .move-btn:hover { border-color: #007bff; color: #007bff; }
 
         /* 댓글 및 대댓글 영역 */
         .comment-section { border-top: 1px dashed #e5e5e5; background: #fafafa; margin-top: 10px; padding: 15px; border-radius: 4px; }
@@ -107,7 +119,7 @@
 
         @media (max-width: 480px) {
             header { font-size: 18px; padding: 15px 10px; text-align: left; }
-            .user-info { right: 10px; top: 10px; font-size: 11px; }
+            .user-info-wrapper { right: 10px; top: 12px; }
             .category-btn { padding: 12px 8px; font-size: 14px; }
             .open-write-btn { padding: 6px 10px; font-size: 12px; }
             .post-title-line { font-size: 14px; }
@@ -117,15 +129,21 @@
 <body>
 
     <header>
-        🤫 reasn
-        <div class="user-info" id="userInfo">
-            <div>
-                <span id="userText">회원</span>
-                <button class="logout-btn" style="background:none; border:1px solid #aaa; padding:2px 5px; font-size:10px; cursor:pointer;" onclick="handleLogout()">LOGOUT</button>
-            </div>
-            <div class="user-stats" id="userStats">포인트: 0점 로딩 중...</div>
-            <div class="header-btns">
-                <button class="top-btn" onclick="openPasswordModal()">비밀번호 변경</button>
+        <a class="logo-link" onclick="resetToHome()">🤫 reasn</a>
+        
+        <div class="user-info-wrapper">
+            <button class="my-profile-trigger" id="userNicknameBtn" onclick="toggleProfileCard()">로딩 회원</button>
+            
+            <div class="my-profile-card" id="myProfileCard">
+                <div class="profile-row"><strong>이메일:</strong> <span id="profEmail">-</span></div>
+                <div class="profile-row"><strong>가입일:</strong> <span id="profDate">-</span></div>
+                <div class="profile-row"><strong>등급:</strong> <span id="profRole">-</span></div>
+                <div class="profile-row" id="profPointsRow"><strong>포인트:</strong> <span id="profPoints">0</span>점</div>
+                
+                <div class="header-btns">
+                    <button class="top-btn" onclick="openPasswordModal()">비밀번호 수정</button>
+                    <button class="top-btn logout-btn" onclick="handleLogout()">LOGOUT</button>
+                </div>
             </div>
         </div>
     </header>
@@ -175,6 +193,7 @@
         var myRole = 'USER';
         var myEmail = 'unknown';
         var myPoints = 0;    
+        var myCreatedAt = '-';
         var supabaseClient = null;
         
         var fetchedPostsCache = []; 
@@ -190,6 +209,7 @@
                     myRole = localStorage.getItem('reasn_user_role') || 'USER';
                     myEmail = localStorage.getItem('reasn_user_email') || 'unknown';
                     myPoints = parseInt(localStorage.getItem('reasn_user_points') || '0');
+                    myCreatedAt = localStorage.getItem('reasn_user_created') || '-';
                 }
             } catch(e) { console.log(e); }
 
@@ -205,6 +225,15 @@
 
             displayPosts();
             setTimeout(function() { checkSession(); }, 50);
+
+            // 외부 클릭 시 프로필 카드 닫히는 센스 장치 추가
+            document.addEventListener('click', function(e) {
+                var card = document.getElementById('myProfileCard');
+                var trigger = document.getElementById('userNicknameBtn');
+                if(card && trigger && !card.contains(e.target) && !trigger.contains(e.target)) {
+                    card.style.display = 'none';
+                }
+            });
         }
 
         async function checkSession() {
@@ -217,6 +246,11 @@
                     myRole = user.user_metadata.role || myRole;
                     myEmail = user.email || myEmail;
                     myPoints = user.user_metadata.points !== undefined ? parseInt(user.user_metadata.points) : myPoints;
+                    
+                    // 가입 날짜 가독성 좋게 추출
+                    if(user.created_at) {
+                        myCreatedAt = new Date(user.created_at).toLocaleDateString('ko-KR');
+                    }
 
                     if (myRole === 'USER') {
                         const { data: upgradeOrders } = await supabaseClient
@@ -237,6 +271,7 @@
                         localStorage.setItem('reasn_user_role', myRole);
                         localStorage.setItem('reasn_user_email', myEmail);
                         localStorage.setItem('reasn_user_points', myPoints);
+                        localStorage.setItem('reasn_user_created', myCreatedAt);
                     }
                     updateUserUI();
                 }
@@ -245,14 +280,58 @@
 
         function updateUserUI() {
             try {
-                const userTextEl = document.getElementById('userText');
-                if (userTextEl) userTextEl.innerText = myName + " (" + myRole + ")";
-                const statsEl = document.getElementById('userStats');
-                if (statsEl) {
-                    if (myRole === 'ADMIN' || myRole === 'VIP') statsEl.innerText = "포인트: " + myPoints + "점 | 등업 완료 ✨";
-                    else statsEl.innerText = "포인트: " + myPoints + "점 | ⏳ " + (100 - myPoints) + "점 더 필요";
+                // 상단 버튼은 오직 닉네임과 등급 뱃지만 표시 (정보 노출 히든 처리 완료)
+                const nickBtn = document.getElementById('userNicknameBtn');
+                if (nickBtn) nickBtn.innerText = myName + " (" + myRole + ")";
+                
+                // 안쪽에 숨겨진 카드 내부 렌더링 동기화
+                document.getElementById('profEmail').innerText = myEmail;
+                document.getElementById('profDate').innerText = myCreatedAt;
+                document.getElementById('profRole').innerText = myRole;
+                
+                const profPoints = document.getElementById('profPoints');
+                if (profPoints) profPoints.innerText = myPoints;
+
+                const pointsRow = document.getElementById('profPointsRow');
+                if (pointsRow) {
+                    if (myRole === 'ADMIN' || myRole === 'VIP') {
+                        pointsRow.innerHTML = `<strong>포인트:</strong> ${myPoints}점 (등업 완료 ✨)`;
+                    } else if (myPoints >= 100) {
+                        pointsRow.innerHTML = `<strong>포인트:</strong> ${myPoints}점 <button style="background:#111; color:#fff; border:none; padding:2px 6px; font-size:10px; cursor:pointer; font-weight:bold; margin-left:4px; border-radius:2px;" onclick="triggerSelfUpgrade()">💎 등업하기</button>`;
+                    } else {
+                        pointsRow.innerHTML = `<strong>포인트:</strong> ${myPoints}점 (⏳ 등업까지 ${100 - myPoints}점)`;
+                    }
                 }
             } catch(e) {}
+        }
+
+        // 🤫 로고 터치 시 첫 자유게시판의 1페이지로 깔끔 리셋 리턴 함수
+        function resetToHome() {
+            try { document.getElementById('searchInput').value = ''; } catch(e){}
+            changeCategory('자유게시판');
+        }
+
+        // 👤 내 정보 토글 스위치 (인라인 모달 형태 구동)
+        function toggleProfileCard() {
+            var card = document.getElementById('myProfileCard');
+            if(!card) return;
+            card.style.display = (card.style.display === 'block') ? 'none' : 'block';
+        }
+
+        async function triggerSelfUpgrade() {
+            if (!supabaseClient) return;
+            if (myPoints < 100) return alert('포인트가 부족합니다!');
+            try {
+                const { error } = await supabaseClient.auth.updateUser({ data: { role: 'VIP', points: myPoints } });
+                if (error) alert('등업 실패: ' + error.message);
+                else {
+                    alert('🎉 VIP 등급으로 등업 완료! 이제 익명게시판 열람 및 작성이 가능합니다.');
+                    myRole = 'VIP';
+                    localStorage.setItem('reasn_user_role', 'VIP');
+                    updateUserUI();
+                    displayPosts();
+                }
+            } catch(e) { alert('오류 발생'); }
         }
 
         function convertLinks(text) {
@@ -286,7 +365,10 @@
             } catch(e){}
         }
 
-        function openPasswordModal() { document.getElementById('passwordModal').style.display = 'flex'; }
+        function openPasswordModal() { 
+            document.getElementById('myProfileCard').style.display = 'none'; // 내 카드 일단 닫기
+            document.getElementById('passwordModal').style.display = 'flex'; 
+        }
         function closePasswordModal() { 
             document.getElementById('passwordModal').style.display = 'none'; 
             document.getElementById('newPassword').value = '';
@@ -295,7 +377,6 @@
         async function changePassword() {
             var newPw = document.getElementById('newPassword').value.trim();
             if(newPw.length < 6) return alert('비밀번호는 최소 6자 이상 입력해주세요!');
-            
             try {
                 const { error } = await supabaseClient.auth.updateUser({ password: newPw });
                 if(error) alert('변경 실패: ' + error.message);
@@ -392,13 +473,11 @@
 
             try {
                 let query = supabaseClient.from('reasn_posts').select('*').eq('category', currentCategory);
-                
                 if (myRole !== 'ADMIN') {
                     query = query.or('is_hidden.is.null,is_hidden.eq.false');
                 }
 
                 const { data: posts, error } = await query.order('created_at', { ascending: true }).limit(200);
-
                 if (error) {
                     board.innerHTML = '<p style="text-align:center; color:red; margin-top:20px;">로드 실패</p>';
                     return;
@@ -566,7 +645,6 @@
                     postBody.appendChild(btnGroup);
                 }
 
-                // 댓글 영역
                 var commentSection = document.createElement('div');
                 commentSection.className = 'comment-section';
 
@@ -618,76 +696,45 @@
             }
         }
 
-        // 🚀 [관리자 전용 원격 게시글 이사(이동) 제어 로직]
-        async function movePostCategory(event, postId) {
-            if(event) event.stopPropagation();
-            if(!supabaseClient || myRole !== 'ADMIN') return;
-
-            var targetBoard = prompt('이 글을 어느 게시판으로 옮기시겠습니까?\n\n1: 자유게시판\n2: 익명게시판\n3: 건의해요\n\n(숫자 1, 2, 3 중 하나만 입력하세요)');
-            
-            if (targetBoard === null) return; // 취소 누르면 중단
-
-            let targetCategory = '';
-            if (targetBoard === '1') targetCategory = '자유게시판';
-            else if (targetBoard === '2') targetCategory = '익명게시판';
-            else if (targetBoard === '3') targetCategory = '건의해요';
-            else return alert('잘못된 입력입니다. 숫자 1, 2, 3 중에서만 골라 입력해 주세요!');
-
-            if (targetCategory === currentCategory) return alert('이미 현재 소속되어 있는 게시판입니다.');
-
-            try {
-                const { error } = await supabaseClient
-                    .from('reasn_posts')
-                    .update({ category: targetCategory })
-                    .eq('id', postId);
-
-                if (error) alert('게시글 이동 실패: ' + error.message);
-                else {
-                    alert(`✅ 글이 [${targetCategory}]으로 성공적으로 순간이동 하였습니다!`);
-                    displayPosts(); // 리스트 갱신
-                }
-            } catch(e) { alert('처리 도중 통신 오류가 발생했습니다.'); }
-        }
-
         async function toggleHidePost(event, postId, currentHiddenStatus) {
             if(event) event.stopPropagation();
             if(!supabaseClient || myRole !== 'ADMIN') return;
-
             var nextStatus = !currentHiddenStatus; 
-            var confirmMsg = nextStatus ? '이 글을 일반 유저들에게 숨기고 보관함으로 이동시키겠습니까?' : '이 글의 숨김 처리를 해제하고 일반 유저들에게 다시 노출하시겠습니까?';
-            
-            if (!confirm(confirmMsg)) return;
-
+            if (!confirm(nextStatus ? '이 글을 일반 유저들에게 숨기고 보관함으로 이동시키겠습니까?' : '이 글의 숨김 처리를 해제하고 일반 유저들에게 다시 노출하시겠습니까?')) return;
             try {
                 const { error } = await supabaseClient.from('reasn_posts').update({ is_hidden: nextStatus }).eq('id', postId);
-                if (error) alert('숨김 처리 실패: ' + error.message);
-                else {
-                    alert(nextStatus ? '글이 안전하게 숨김 처리되었습니다.' : '글의 숨김 처리가 해제되었습니다.');
-                    displayPosts();
-                }
+                if (error) alert('숨김 실패: ' + error.message);
+                else displayPosts();
             } catch(e) { alert('오류 발생'); }
+        }
+
+        async function movePostCategory(event, postId) {
+            if(event) event.stopPropagation();
+            if(!supabaseClient || myRole !== 'ADMIN') return;
+            var targetBoard = prompt('이 글을 어느 게시판으로 옮기시겠습니까?\n\n1: 자유게시판\n2: 익명게시판\n3: 건의해요');
+            if (targetBoard === null) return;
+            let targetCategory = targetBoard === '1' ? '자유게시판' : targetBoard === '2' ? '익명게시판' : targetBoard === '3' ? '건의해요' : '';
+            if (!targetCategory) return alert('숫자 1, 2, 3 중에서만 입력해 주세요!');
+            try {
+                const { error } = await supabaseClient.from('reasn_posts').update({ category: targetCategory }).eq('id', postId);
+                if (error) alert('이동 실패: ' + error.message);
+                else { alert(`✅ [${targetCategory}]으로 이동 완료!`); displayPosts(); }
+            } catch(e) {}
         }
 
         function setupSubCommentInput(postId, targetAuthor) {
             var input = document.getElementById('reply-input-' + postId);
-            if(input) {
-                input.value = `↳ @${targetAuthor} `;
-                input.focus();
-            }
+            if(input) { input.value = `↳ @${targetAuthor} `; input.focus(); }
         }
 
         function openEditModal(event, postId, oldTitle) {
             if(event) event.stopPropagation();
             editTargetPostId = postId;
             var oldContent = document.getElementById(`post-text-${postId}`).innerText;
-            
             document.getElementById('modalTitle').innerText = '게시글 수정하기';
             document.getElementById('modalSubmitBtn').innerText = '수정 완료';
-            document.getElementById('modalNotice').innerText = "💡 수정을 완료하시면 목록 화면에 즉시 반영됩니다.";
-            
             document.getElementById('postTitle').value = oldTitle;
             document.getElementById('box').value = oldContent;
-            
             document.getElementById('writeModal').style.display = 'flex';
         }
 
@@ -704,9 +751,8 @@
 
         async function deletePost(event, postId) {
             if(event) event.stopPropagation();
-            if(!supabaseClient) return;
             try {
-                if (!confirm('정말 이 글을 완전히 삭제하시겠습니까? 데이터베이스에서 소멸됩니다.')) return;
+                if (!confirm('정말 이 글을 완전히 삭제하시겠습니까?')) return;
                 const { error } = await supabaseClient.from('reasn_posts').delete().eq('id', postId);
                 if (error) alert('삭제 실패: ' + error.message);
                 else displayPosts();
