@@ -58,6 +58,9 @@
         .post-num { color: #aaa; font-weight: 400; font-size: 13px; min-width: 22px; text-align: left; }
         .comment-count-badge { color: #ff3b30; font-size: 14px; font-weight: bold; margin-left: 2px; }
         
+        /* 📌 상단 고정 공지사항 전용 라벨 디자인 */
+        .notice-label { font-size: 11px; background-color: #111; color: #fff; padding: 2px 5px; font-weight: bold; border-radius: 3px; font-style: normal; }
+        
         .post-meta-line { font-size: 12px; color: #888; display: flex; align-items: center; gap: 6px; }
         .clickable-author { text-decoration: none; font-weight: 500; }
         .clickable-author.can-upgrade { cursor: pointer; text-decoration: underline; color: #007bff; }
@@ -73,12 +76,13 @@
         .post-content a { color: #007bff; text-decoration: underline; }
         .post-time { font-size: 11px; color: #bbb; margin-bottom: 12px; }
         
-        .action-buttons { display: flex; gap: 10px; margin-bottom: 15px; }
+        .action-buttons { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .action-btn { background: none; border: 1px solid #eee; color: #777; padding: 4px 10px; font-size: 11px; cursor: pointer; border-radius: 3px; }
         .action-btn:hover { border-color: #111; color: #111; }
         .delete-btn:hover { border-color: #ff3b30; color: #ff3b30; }
         .hide-btn:hover { border-color: #ff9500; color: #ff9500; }
         .move-btn:hover { border-color: #007bff; color: #007bff; }
+        .notice-btn:hover { border-color: #111; color: #fff; background-color: #111; } /* 공지 버튼 호버 */
 
         /* 댓글 및 대댓글 영역 */
         .comment-section { border-top: 1px dashed #e5e5e5; background: #fafafa; margin-top: 10px; padding: 15px; border-radius: 4px; }
@@ -90,7 +94,6 @@
         .comment-author { font-weight: bold; color: #222; margin-right: 6px; }
         .comment-badge { font-size: 9px; padding: 1px 3px; margin-right: 5px; background: #eee; border-radius: 2px; }
         
-        /* 💬 댓글 내 제어 단추 전용 링크 스타일 */
         .comment-actions-span { font-size: 11px; color: #888; margin-left: 8px; }
         .comment-action-link { cursor: pointer; color: #777; text-decoration: none; margin-left: 5px; }
         .comment-action-link:hover { color: #111; text-decoration: underline; }
@@ -348,6 +351,12 @@
                 document.getElementById('modalTitle').innerText = currentCategory + ' 글쓰기';
                 document.getElementById('modalSubmitBtn').innerText = '외치기';
                 document.getElementById('modalNotice').innerText = currentCategory === '자유게시판' ? "💡 자유게시판에 글을 쓰면 10포인트가 적립됩니다." : "";
+                
+                // 만약 관리자(ADMIN)가 글 쓰는 상태라면 공지사항 설정 팁 문구 추가 표기
+                if (myRole === 'ADMIN') {
+                    document.getElementById('modalNotice').innerText += " (👑 관리자는 글 작성 후 본문 하단에서 공지사항으로 고정할 수 있습니다.)";
+                }
+
                 document.getElementById('writeModal').style.display = 'flex'; 
             } catch(e){}
         }
@@ -473,6 +482,15 @@
                     posts[i].local_num = i + 1;
                     displayList.unshift(posts[i]); 
                 }
+
+                // 📌 [공지사항 최상단 고정 정렬 엔진 기술] 
+                // 전체 데이터 중 is_notice가 true인 공지용 글을 상단으로 띄우고, 일반 글은 아래로 밀어서 정렬합니다.
+                displayList.sort(function(a, b) {
+                    var aNotice = a.is_notice === true ? 1 : 0;
+                    var bNotice = b.is_notice === true ? 1 : 0;
+                    return bNotice - aNotice; // 공지가 1등으로 오도록 연산
+                });
+
                 fetchedPostsCache = displayList;
                 renderPagination(fetchedPostsCache);
             } catch (postError) { board.innerHTML = '<p style="text-align:center; color:red; margin-top:20px;">오류</p>'; }
@@ -530,7 +548,10 @@
 
                 var newPost = document.createElement('div');
                 newPost.className = 'post';
-                if (post.is_hidden === true) newPost.style.backgroundColor = '#fff6e6';
+                
+                // 공지사항 글인 경우 배경색을 은은하게 다르게 주어 시선 고정 극대화
+                if (post.is_notice === true) newPost.style.backgroundColor = '#fcfcfc';
+                else if (post.is_hidden === true) newPost.style.backgroundColor = '#fff6e6';
 
                 var postHeader = document.createElement('div');
                 postHeader.className = 'post-header';
@@ -538,10 +559,14 @@
 
                 var titleLine = document.createElement('div');
                 titleLine.className = 'post-title-line';
+                
+                // 📌 공지 뱃지 노출 조건 설계
+                var numberOrNoticeLabel = post.is_notice === true ? '<i class="notice-label">📌 공지</i>' : `<span class="post-num">${post.local_num}</span>`;
                 var tabularLabel = post.is_hidden === true ? '<span style="color:#ff9500; font-size:12px; font-weight:bold; margin-right:5px;">[숨김보관]</span>' : '';
+                
                 titleLine.innerHTML = `
-                    <span class="post-num">${post.local_num}</span> 
-                    <span>${tabularLabel}${post.title || '제목 없음'}<span class="comment-count-badge">(${postComments.length})</span></span>
+                    ${numberOrNoticeLabel}
+                    <span style="${post.is_notice === true ? 'font-weight:bold;' : ''}">${tabularLabel}${post.title || '제목 없음'}<span class="comment-count-badge">(${postComments.length})</span></span>
                 `;
                 
                 var metaLine = document.createElement('div');
@@ -592,9 +617,11 @@
                 }
                 if (myRole === 'ADMIN') {
                     var hideToggleText = post.is_hidden === true ? '숨김 해제' : '숨김';
+                    var noticeToggleText = post.is_notice === true ? '공지 해제' : '공지 설정';
                     btnGroup.innerHTML += `
                         <button class="action-btn hide-btn" onclick="toggleHidePost(event, ${post.id}, ${post.is_hidden})">${hideToggleText}</button>
                         <button class="action-btn move-btn" onclick="movePostCategory(event, ${post.id})">이동</button>
+                        <button class="action-btn notice-btn" onclick="toggleNoticePost(event, ${post.id}, ${post.is_notice})">${noticeToggleText}</button>
                     `;
                 }
                 if (btnGroup.innerHTML !== '') postBody.appendChild(btnGroup);
@@ -627,7 +654,6 @@
                         }
                     }
 
-                    // ↳ [댓글 수정 및 삭제 권한 할당] 본인 글이거나 관리자일 때 제어 도구 스팬 추가
                     let actionHtml = '';
                     if (myRole === 'ADMIN' || (comment.user_email && comment.user_email !== 'unknown' && comment.user_email === myEmail)) {
                         actionHtml = `
@@ -659,13 +685,34 @@
             }
         }
 
-        // 🛠️ [댓글 수정 인라인 프롬프트 함수]
+        // 📌 [관리자 전용 공지사항 토글 엔진 제어 함수]
+        async function toggleNoticePost(event, postId, currentNoticeStatus) {
+            if(event) event.stopPropagation();
+            if(!supabaseClient || myRole !== 'ADMIN') return;
+
+            var nextStatus = !currentNoticeStatus;
+            var confirmMsg = nextStatus ? '이 게시글을 상단 고정 공지사항으로 등록하시겠습니까?' : '이 게시글의 상단 고정 공지 설정을 해제하시겠습니까?';
+            if(!confirm(confirmMsg)) return;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('reasn_posts')
+                    .update({ is_notice: nextStatus })
+                    .eq('id', postId);
+
+                if (error) alert('공지 설정 실패: ' + error.message);
+                else {
+                    alert(nextStatus ? '📌 공지사항으로 등록되어 최상단에 상시 고정됩니다!' : '공지 설정이 해제되었습니다.');
+                    displayPosts();
+                }
+            } catch(e) { alert('오류 발생'); }
+        }
+
         async function editComment(commentId, currentContent) {
             if(!supabaseClient) return;
             var newText = prompt('수정할 댓글 내용을 입력해 주세요:', currentContent);
             if (newText === null) return;
             if (newText.trim() === '') return alert('댓글 내용을 입력하셔야 합니다!');
-            
             try {
                 const { error } = await supabaseClient.from('reasn_comments').update({ content: newText.trim() }).eq('id', commentId);
                 if (error) alert('댓글 수정 실패: ' + error.message);
@@ -673,11 +720,9 @@
             } catch(e) { alert('오류 발생'); }
         }
 
-        // 🛠️ [댓글 원격 완전 소멸 함수]
         async function deleteComment(commentId) {
             if(!supabaseClient) return;
             if(!confirm('정말 이 댓글을 삭제하시겠습니까? 데이터가 완전히 소멸됩니다.')) return;
-            
             try {
                 const { error } = await supabaseClient.from('reasn_comments').delete().eq('id', commentId);
                 if (error) alert('댓글 삭제 실패: ' + error.message);
