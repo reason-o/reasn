@@ -31,16 +31,30 @@
         .container { display: flex; flex: 1; max-width: 700px; width: 100%; margin: 0 auto; padding: 15px 15px; flex-direction: column; position: relative; z-index: 1; }
         
         /* 📱 모바일 카테고리 탭 */
-        .board-controls { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; margin-bottom: 10px; gap: 10px; }
-        .category-tabs { display: flex; flex: 1; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+        .board-controls { border-bottom: 1px solid #eee; margin-bottom: 15px; }
+        .category-tabs { display: flex; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
         .category-tabs::-webkit-scrollbar { display: none; }
         
         .category-btn { padding: 15px 12px; background: none; border: none; font-size: 15px; font-weight: 500; color: #999; cursor: pointer; transition: all 0.2s; border-bottom: 3px solid transparent; flex-shrink: 0; }
         .category-btn:hover, .category-btn.active { color: #111; }
         .category-btn.active { border-bottom: 3px solid #111; font-weight: bold; color: #111; }
         
-        .open-write-btn { padding: 8px 14px; background-color: #111; color: #fff; border: none; font-size: 13px; font-weight: bold; cursor: pointer; letter-spacing: 0.5px; flex-shrink: 0; }
-        .open-write-btn:hover { background-color: #333; }
+        /* ✍️ [팝업 제거] 상단 상시 노출형 글쓰기 영역 스타일 */
+        .inline-write-section { background: #fafafa; padding: 16px; border: 1px solid #eee; border-radius: 6px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .inline-write-title { font-size: 14px; font-weight: bold; color: #333; margin-bottom: 2px; }
+        .title-input { width: 100%; padding: 10px; border: 1px solid #ddd; font-size: 13px; font-weight: bold; border-radius: 4px; background: #fff; }
+        .title-input:focus { outline: none; border-color: #111; }
+        .content-textarea { width: 100%; height: 120px; padding: 10px; border: 1px solid #ddd; resize: none; font-size: 13px; border-radius: 4px; line-height: 1.5; background: #fff; }
+        .content-textarea:focus { outline: none; border-color: #111; }
+        
+        /* 📌 작성 창 내 공지사항 체크박스 라인 */
+        .notice-check-wrapper { display: none; align-items: center; gap: 6px; font-size: 12px; font-weight: bold; color: #111; margin-top: 2px; }
+        .notice-check-wrapper input { cursor: pointer; width: 14px; height: 14px; }
+        
+        .submit-btn { width: 100%; padding: 12px; background-color: #111; color: #fff; border: none; cursor: pointer; font-size: 13px; font-weight: bold; border-radius: 4px; letter-spacing: 0.5px; }
+        .submit-btn:hover { background-color: #333; }
+        .cancel-edit-btn { background-color: #fff; color: #555; border: 1px solid #ddd; margin-top: -4px; }
+        .cancel-edit-btn:hover { background-color: #f5f5f5; color: #111; }
 
         /* 🔍 검색 바 */
         .search-wrapper { display: flex; gap: 8px; margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 12px; }
@@ -58,7 +72,6 @@
         .post-num { color: #aaa; font-weight: 400; font-size: 13px; min-width: 22px; text-align: left; }
         .comment-count-badge { color: #ff3b30; font-size: 14px; font-weight: bold; margin-left: 2px; }
         
-        /* 📌 상단 고정 공지사항 전용 라벨 디자인 */
         .notice-label { font-size: 11px; background-color: #111; color: #fff; padding: 2px 5px; font-weight: bold; border-radius: 3px; font-style: normal; }
         
         .post-meta-line { font-size: 12px; color: #888; display: flex; align-items: center; gap: 6px; }
@@ -82,7 +95,7 @@
         .delete-btn:hover { border-color: #ff3b30; color: #ff3b30; }
         .hide-btn:hover { border-color: #ff9500; color: #ff9500; }
         .move-btn:hover { border-color: #007bff; color: #007bff; }
-        .notice-btn:hover { border-color: #111; color: #fff; background-color: #111; } /* 공지 버튼 호버 */
+        .notice-btn:hover { border-color: #111; color: #fff; background-color: #111; }
 
         /* 댓글 및 대댓글 영역 */
         .comment-section { border-top: 1px dashed #e5e5e5; background: #fafafa; margin-top: 10px; padding: 15px; border-radius: 4px; }
@@ -112,24 +125,17 @@
         .page-btn:hover, .page-btn.active { background: #111; color: #fff; border-color: #111; }
         .page-btn:disabled { background: #fff; border-color: #eee; color: #ccc; cursor: not-allowed; }
 
-        /* 🔲 모달 팝업 */
+        /* 🔲 비밀번호 변경 모달 팝업 (이 기능만 모달 유지) */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 2000; }
-        .modal-content { background: #fff; padding: 25px; width: 92%; max-width: 550px; border-radius: 6px; display: flex; flex-direction: column; gap: 12px; position: relative; border: 1px solid #111; }
+        .modal-content { background: #fff; padding: 25px; width: 92%; max-width: 400px; border-radius: 6px; display: flex; flex-direction: column; gap: 12px; position: relative; border: 1px solid #111; }
         .modal-title { font-size: 18px; font-weight: bold; }
-        .modal-write-notice { font-size: 12px; color: #ff3b30; font-weight: bold; }
         .modal-close { position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: #aaa; padding: 2px; }
         .modal-close:hover { color: #111; }
-        .title-input { width: 100%; padding: 11px; border: 1px solid #ddd; font-size: 14px; font-weight: bold; border-radius: 4px; }
-        .title-input:focus { outline: none; border-color: #111; }
-        .content-textarea { width: 100%; height: 180px; padding: 11px; border: 1px solid #ddd; resize: none; font-size: 13px; border-radius: 4px; line-height: 1.5; }
-        .content-textarea:focus { outline: none; border-color: #111; }
-        .submit-btn { width: 100%; padding: 12px; background-color: #111; color: #fff; border: none; cursor: pointer; font-size: 14px; font-weight: bold; border-radius: 4px; }
 
         @media (max-width: 480px) {
             header { font-size: 18px; padding: 15px 10px; text-align: left; }
             .user-info-wrapper { right: 10px; top: 12px; }
             .category-btn { padding: 12px 8px; font-size: 14px; }
-            .open-write-btn { padding: 6px 10px; font-size: 12px; }
             .post-title-line { font-size: 14px; }
         }
     </style>
@@ -163,7 +169,23 @@
                 <button class="category-btn" id="tab-익명게시판" onclick="changeCategory('익명게시판')">익명게시판</button>
                 <button class="category-btn" id="tab-건의해요" onclick="changeCategory('건의해요')">건의해요</button>
             </div>
-            <button class="open-write-btn" onclick="openModal()">+ 글쓰기</button>
+        </div>
+
+        <!-- ✍️ [팝업창 완벽 제거] 상시 노출 고정형 인라인 작성 양식 창 -->
+        <div class="inline-write-section" id="writeSectionArea">
+            <div class="inline-write-title" id="writeFormTitle">새 글 이야기 나누기</div>
+            <input type="text" id="postTitle" class="title-input" placeholder="제목을 입력하세요">
+            <textarea id="box" class="content-textarea" placeholder="생각이나 링크를 채워주세요... 자유게시판 작성 시 10포인트 적립!"></textarea>
+            
+            <!-- 📌 관리자 전용 공지사항 즉시 등록 체크 박스 라인 -->
+            <div class="notice-check-wrapper" id="adminNoticeCheckLine">
+                <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer;">
+                    <input type="checkbox" id="postIsNotice"> 📌 이 게시글을 상단 고정 공지사항으로 등록
+                </label>
+            </div>
+
+            <button class="submit-btn" id="writeSubmitBtn" onclick="savePost()">외치기</button>
+            <button class="submit-btn cancel-edit-btn" id="cancelEditBtn" style="display:none;" onclick="cancelEditMode()">수정 취소</button>
         </div>
 
         <div class="search-wrapper">
@@ -175,21 +197,9 @@
         <div class="pagination" id="paginationBox"></div>
     </div>
 
-    <!-- 글쓰기 및 수정 모달 -->
-    <div class="modal-overlay" id="writeModal">
-        <div class="modal-content">
-            <span class="modal-close" onclick="closeModal()">&times;</span>
-            <div class="modal-title" id="modalTitle">새 글 쓰기</div>
-            <div class="modal-write-notice" id="modalNotice"></div>
-            <input type="text" id="postTitle" class="title-input" placeholder="제목을 입력하세요">
-            <textarea id="box" class="content-textarea" placeholder="내용을 채워주세요..."></textarea>
-            <button class="submit-btn" id="modalSubmitBtn" onclick="savePost()">외치기</button>
-        </div>
-    </div>
-
     <!-- 비밀번호 변경 모달 -->
     <div class="modal-overlay" id="passwordModal">
-        <div class="modal-content" style="max-width:400px;">
+        <div class="modal-content">
             <span class="modal-close" onclick="closePasswordModal()">&times;</span>
             <div class="modal-title">비밀번호 변경</div>
             <input type="password" id="newPassword" class="title-input" placeholder="새로운 비밀번호 입력 (6자 이상)">
@@ -303,7 +313,37 @@
                         pointsRow.innerHTML = `<strong>포인트:</strong> ${myPoints}점 (⏳ 등업까지 ${100 - myPoints}점)`;
                     }
                 }
+
+                // 📌 관리자일 때만 글쓰기 상자 내 공지사항 체크박스 노출 처리
+                const noticeLine = document.getElementById('adminNoticeCheckLine');
+                if(noticeLine) {
+                    noticeLine.style.display = (myRole === 'ADMIN') ? 'flex' : 'none';
+                }
+
+                // 일반 유저가 익명게시판 탭에 와있을 경우 입력 방어 안내문 연동
+                checkWriteSectionVisibility();
             } catch(e) {}
+        }
+
+        function checkWriteSectionVisibility() {
+            const area = document.getElementById('writeSectionArea');
+            if(!area) return;
+            
+            if (currentCategory === '익명게시판' && myRole !== 'VIP' && myRole !== 'ADMIN') {
+                area.style.opacity = '0.5';
+                document.getElementById('postTitle').disabled = true;
+                document.getElementById('box').disabled = true;
+                document.getElementById('box').placeholder = "🔒 익명게시판은 VIP 등급만 작성할 수 있는 비밀 공간입니다.";
+                document.getElementById('writeSubmitBtn').disabled = true;
+                document.getElementById('writeSubmitBtn').innerText = 'VIP 권한 필요';
+            } else {
+                area.style.opacity = '1';
+                document.getElementById('postTitle').disabled = false;
+                document.getElementById('box').disabled = false;
+                document.getElementById('box').placeholder = currentCategory === '자유게시판' ? "생각이나 링크를 채워주세요... 자유게시판 작성 시 10포인트 적립!" : "생각이나 링크를 채워주세요...";
+                document.getElementById('writeSubmitBtn').disabled = false;
+                document.getElementById('writeSubmitBtn').innerText = editTargetPostId ? '수정 완료' : '외치기';
+            }
         }
 
         function resetToHome() {
@@ -341,35 +381,6 @@
             });
         }
 
-        function openModal() { 
-            try { 
-                if (currentCategory === '익명게시판' && myRole !== 'VIP' && myRole !== 'ADMIN') {
-                    alert('🔒 익명게시판은 VIP 등급 전용 공간입니다. 자유게시판에서 포인트를 쌓아 등업을 신청해 주세요!');
-                    return;
-                }
-                editTargetPostId = null; 
-                document.getElementById('modalTitle').innerText = currentCategory + ' 글쓰기';
-                document.getElementById('modalSubmitBtn').innerText = '외치기';
-                document.getElementById('modalNotice').innerText = currentCategory === '자유게시판' ? "💡 자유게시판에 글을 쓰면 10포인트가 적립됩니다." : "";
-                
-                // 만약 관리자(ADMIN)가 글 쓰는 상태라면 공지사항 설정 팁 문구 추가 표기
-                if (myRole === 'ADMIN') {
-                    document.getElementById('modalNotice').innerText += " (👑 관리자는 글 작성 후 본문 하단에서 공지사항으로 고정할 수 있습니다.)";
-                }
-
-                document.getElementById('writeModal').style.display = 'flex'; 
-            } catch(e){}
-        }
-        
-        function closeModal() {
-            try {
-                document.getElementById('writeModal').style.display = 'none';
-                document.getElementById('postTitle').value = '';
-                document.getElementById('box').value = '';
-                editTargetPostId = null;
-            } catch(e){}
-        }
-
         function openPasswordModal() { 
             document.getElementById('myProfileCard').style.display = 'none'; 
             document.getElementById('passwordModal').style.display = 'flex'; 
@@ -404,6 +415,7 @@
         function changeCategory(categoryName) {
             currentCategory = categoryName;
             currentPage = 1; 
+            cancelEditMode(); // 카테고리 이동 시 수정 모드 자동 취소 및 폼 리셋
             try { document.getElementById('searchInput').value = ''; } catch(e){}
             try {
                 var buttons = document.querySelectorAll('.category-btn');
@@ -413,21 +425,34 @@
                 });
             } catch(e){}
             displayPosts();
+            checkWriteSectionVisibility();
         }
 
         async function savePost() {
             if (!supabaseClient) return alert('네트워크 연결 확인이 필요합니다.');
             var titleText = document.getElementById('postTitle').value.trim();
             var contentText = document.getElementById('box').value.trim();
+            
+            // 📌 공지사항 체크 상태값 로드
+            var checkNoticeEl = document.getElementById('postIsNotice');
+            var isNoticeChecked = checkNoticeEl ? checkNoticeEl.checked : false;
+
             if (!titleText || !contentText) return alert('내용을 채워주세요!');
 
             if (editTargetPostId) {
+                // ✍️ 수정 모드 업데이트 처리
                 try {
-                    const { error } = await supabaseClient.from('reasn_posts').update({ title: titleText, content: contentText }).eq('id', editTargetPostId);
+                    // 수정할 때도 공지사항 체크 여부를 반영할 수 있도록 필드 동기화
+                    const { error } = await supabaseClient
+                        .from('reasn_posts')
+                        .update({ title: titleText, content: contentText, is_notice: isNoticeChecked })
+                        .eq('id', editTargetPostId);
+                        
                     if (error) alert('수정 실패: ' + error.message);
-                    else { closeModal(); displayPosts(); }
+                    else { cancelEditMode(); displayPosts(); }
                 } catch(e){ alert('수정 처리 오류'); }
             } else {
+                // 새 글 등록 모드
                 let displayAuthor = myName;
                 if (myRole === 'ADMIN') displayAuthor = '관리자';
                 else if (currentCategory === '익명게시판') displayAuthor = '익명';
@@ -435,7 +460,16 @@
                 try {
                     const { error } = await supabaseClient
                         .from('reasn_posts')
-                        .insert([{ category: currentCategory, title: titleText, content: contentText, user_name: displayAuthor, user_role: myRole, user_email: myEmail }]);
+                        .insert([{ 
+                            category: currentCategory, 
+                            title: titleText, 
+                            content: contentText, 
+                            user_name: displayAuthor, 
+                            user_role: myRole, 
+                            user_email: myEmail,
+                            is_notice: isNoticeChecked // 📌 체크 여부에 따라 true/false 분기 등록 완료
+                        }]);
+                        
                     if (error) return alert('글 등록 실패: ' + error.message);
 
                     if (currentCategory === '자유게시판' && myRole === 'USER') {
@@ -443,7 +477,14 @@
                         localStorage.setItem('reasn_user_points', myPoints);
                         try { await supabaseClient.auth.updateUser({ data: { points: myPoints } }); } catch(uErr) {}
                     }
-                    closeModal(); updateUserUI(); displayPosts(); 
+                    
+                    // 작성 폼 초기화
+                    document.getElementById('postTitle').value = '';
+                    document.getElementById('box').value = '';
+                    if(checkNoticeEl) checkNoticeEl.checked = false;
+
+                    updateUserUI(); displayPosts(); 
+                    alert('이야기가 성공적으로 등록되었습니다.');
                 } catch(e) { alert('통신 오류'); }
             }
         }
@@ -483,12 +524,11 @@
                     displayList.unshift(posts[i]); 
                 }
 
-                // 📌 [공지사항 최상단 고정 정렬 엔진 기술] 
-                // 전체 데이터 중 is_notice가 true인 공지용 글을 상단으로 띄우고, 일반 글은 아래로 밀어서 정렬합니다.
+                // 📌 공지사항 최상단 고정 정렬
                 displayList.sort(function(a, b) {
                     var aNotice = a.is_notice === true ? 1 : 0;
                     var bNotice = b.is_notice === true ? 1 : 0;
-                    return bNotice - aNotice; // 공지가 1등으로 오도록 연산
+                    return bNotice - aNotice;
                 });
 
                 fetchedPostsCache = displayList;
@@ -549,7 +589,6 @@
                 var newPost = document.createElement('div');
                 newPost.className = 'post';
                 
-                // 공지사항 글인 경우 배경색을 은은하게 다르게 주어 시선 고정 극대화
                 if (post.is_notice === true) newPost.style.backgroundColor = '#fcfcfc';
                 else if (post.is_hidden === true) newPost.style.backgroundColor = '#fff6e6';
 
@@ -560,7 +599,6 @@
                 var titleLine = document.createElement('div');
                 titleLine.className = 'post-title-line';
                 
-                // 📌 공지 뱃지 노출 조건 설계
                 var numberOrNoticeLabel = post.is_notice === true ? '<i class="notice-label">📌 공지</i>' : `<span class="post-num">${post.local_num}</span>`;
                 var tabularLabel = post.is_hidden === true ? '<span style="color:#ff9500; font-size:12px; font-weight:bold; margin-right:5px;">[숨김보관]</span>' : '';
                 
@@ -611,7 +649,7 @@
 
                 if (myRole === 'ADMIN' || (post.user_email && post.user_email !== 'unknown' && post.user_email === myEmail)) {
                     btnGroup.innerHTML += `
-                        <button class="action-btn" onclick="openEditModal(event, ${post.id}, '${post.title.replace(/'/g, "\\'")}')">수정</button>
+                        <button class="action-btn" onclick="triggerInlineEdit(event, ${post.id}, '${post.title.replace(/'/g, "\\'")}', ${post.is_notice})">수정</button>
                         <button class="action-btn delete-btn" onclick="deletePost(event, ${post.id})">삭제</button>
                     `;
                 }
@@ -685,26 +723,51 @@
             }
         }
 
-        // 📌 [관리자 전용 공지사항 토글 엔진 제어 함수]
+        // ✍️ [사양 반영] 수정 클릭 시 팝업을 띄우지 않고 상단 고정식 글쓰기 폼으로 내용 스왑 연동 함수
+        function triggerInlineEdit(event, postId, oldTitle, isNoticeStatus) {
+            if(event) event.stopPropagation();
+            editTargetPostId = postId;
+            
+            var oldContent = document.getElementById(`post-text-${postId}`).innerText;
+            
+            document.getElementById('writeFormTitle').innerText = '⚡ 이야기 수정하는 중...';
+            document.getElementById('postTitle').value = oldTitle;
+            document.getElementById('box').value = oldContent;
+            
+            // 공지사항 체크박스 상태값도 동기화
+            var checkNoticeEl = document.getElementById('postIsNotice');
+            if(checkNoticeEl) checkNoticeEl.checked = (isNoticeStatus === true);
+            
+            document.getElementById('writeSubmitBtn').innerText = '수정 완료';
+            document.getElementById('cancelEditBtn').style.display = 'block';
+            
+            // 화면 스크롤을 글쓰기 폼 맨 위로 스르륵 이동 (사용성 배려)
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ✍️ 수정 모드 취소 및 폼 리셋 함수
+        function cancelEditMode() {
+            editTargetPostId = null;
+            document.getElementById('writeFormTitle').innerText = '새 글 이야기 나누기';
+            document.getElementById('postTitle').value = '';
+            document.getElementById('box').value = '';
+            
+            var checkNoticeEl = document.getElementById('postIsNotice');
+            if(checkNoticeEl) checkNoticeEl.checked = false;
+
+            document.getElementById('writeSubmitBtn').innerText = '외치기';
+            document.getElementById('cancelEditBtn').style.display = 'none';
+        }
+
         async function toggleNoticePost(event, postId, currentNoticeStatus) {
             if(event) event.stopPropagation();
             if(!supabaseClient || myRole !== 'ADMIN') return;
-
             var nextStatus = !currentNoticeStatus;
-            var confirmMsg = nextStatus ? '이 게시글을 상단 고정 공지사항으로 등록하시겠습니까?' : '이 게시글의 상단 고정 공지 설정을 해제하시겠습니까?';
-            if(!confirm(confirmMsg)) return;
-
+            if(!confirm(nextStatus ? '이 게시글을 상단 고정 공지사항으로 등록하시겠습니까?' : '이 게시글의 상단 고정 공지 설정을 해제하시겠습니까?')) return;
             try {
-                const { error } = await supabaseClient
-                    .from('reasn_posts')
-                    .update({ is_notice: nextStatus })
-                    .eq('id', postId);
-
-                if (error) alert('공지 설정 실패: ' + error.message);
-                else {
-                    alert(nextStatus ? '📌 공지사항으로 등록되어 최상단에 상시 고정됩니다!' : '공지 설정이 해제되었습니다.');
-                    displayPosts();
-                }
+                const { error } = await supabaseClient.from('reasn_posts').update({ is_notice: nextStatus }).eq('id', postId);
+                if (error) alert('공지 실패: ' + error.message);
+                else displayPosts();
             } catch(e) { alert('오류 발생'); }
         }
 
@@ -759,17 +822,6 @@
         function setupSubCommentInput(postId, targetAuthor) {
             var input = document.getElementById('reply-input-' + postId);
             if(input) { input.value = `↳ @${targetAuthor} `; input.focus(); }
-        }
-
-        function openEditModal(event, postId, oldTitle) {
-            if(event) event.stopPropagation();
-            editTargetPostId = postId;
-            var oldContent = document.getElementById(`post-text-${postId}`).innerText;
-            document.getElementById('modalTitle').innerText = '게시글 수정하기';
-            document.getElementById('modalSubmitBtn').innerText = '수정 완료';
-            document.getElementById('postTitle').value = oldTitle;
-            document.getElementById('box').value = oldContent;
-            document.getElementById('writeModal').style.display = 'flex';
         }
 
         function togglePostBody(postId) {
