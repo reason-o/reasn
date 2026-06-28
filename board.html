@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>reasn - 커뮤니티</title>
+    <title>REASN으로 초대합니다.</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         /* 🖤 극도의 미니멀 화이트 & 줄노트(Line) 레이아웃 */
@@ -44,11 +44,19 @@
         .open-write-btn { padding: 8px 14px; background-color: #111; color: #fff; border: none; font-size: 13px; font-weight: bold; cursor: pointer; letter-spacing: 0.5px; flex-shrink: 0; border-radius: 4px; }
         .open-write-btn:hover { background-color: #333; }
 
-        /* 📋 [메인 화면 리스트 뷰 영역] */
-        .listViewSection { display: block; }
+        /* 📋 각 섹션 제어 클래스 */
+        .view-section { display: none; }
+        .listViewSection { display: block; } /* 기본 리스트 노출 */
+        .writeViewSection { flex-direction: column; gap: 15px; padding: 10px 4px; }
+        
+        /* 👁️ [새로 추가된 독립된 글 상세보기 뷰 섹션] */
+        .detailViewSection { flex-direction: column; padding: 15px 4px; }
+        .detail-title { font-size: 20px; font-weight: bold; color: #111; line-height: 1.4; margin-bottom: 10px; word-break: break-all; }
+        .detail-meta { font-size: 13px; color: #666; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 20px; }
+        .detail-content { font-size: 15px; line-height: 1.7; color: #222; white-space: pre-wrap; word-break: break-all; min-height: 150px; margin-bottom: 25px; }
+        .detail-content a { color: #007bff; text-decoration: underline; }
 
-        /* ✍️ [전체 화면 전환형 글 작성 뷰 영역] */
-        .writeViewSection { display: none; flex-direction: column; gap: 15px; padding: 10px 4px; }
+        /* ✍️ 글 작성 뷰 관련 스타일 */
         .write-view-title { font-size: 18px; font-weight: bold; color: #111; border-bottom: 2px solid #111; padding-bottom: 8px; margin-bottom: 5px; }
         .title-input { width: 100%; padding: 12px; border: 1px solid #ddd; font-size: 14px; font-weight: bold; border-radius: 4px; background: #fff; }
         .title-input:focus { outline: none; border-color: #111; }
@@ -72,9 +80,9 @@
 
         /* 📝 줄노트 감성 게시글 목록 리스트 */
         .post-list-wrapper { display: flex; flex-direction: column; }
-        .post { background: #fff; padding: 16px 4px; border-bottom: 1px solid #f0f0f0; transition: background 0.1s; }
+        .post { background: #fff; padding: 16px 4px; border-bottom: 1px solid #f0f0f0; transition: background 0.1s; cursor: pointer; }
         .post:hover { background-color: #fafafa; }
-        .post-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .post-header { display: flex; justify-content: space-between; align-items: center; }
         
         .post-title-line { font-size: 15px; font-weight: 600; color: #111; flex: 1; margin-right: 15px; display: flex; gap: 12px; align-items: center; }
         .post-num { color: #aaa; font-weight: 400; font-size: 13px; min-width: 22px; text-align: left; }
@@ -91,13 +99,7 @@
         .badge-vip { background-color: #e6f0ff; color: #007bff; }
         .badge-admin { background-color: #ffebe6; color: #ff3b30; }
         
-        /* 접고 펼쳐지는 본문 구역 */
-        .post-body { display: none; padding: 15px 4px 5px 4px; }
-        .post-content { font-size: 14px; line-height: 1.6; color: #222; margin-bottom: 12px; white-space: pre-wrap; word-break: break-all; }
-        .post-content a { color: #007bff; text-decoration: underline; }
-        .post-time { font-size: 11px; color: #bbb; margin-bottom: 12px; }
-        
-        .action-buttons { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .action-buttons { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; border-bottom: 1px dashed #eee; padding-bottom: 15px; }
         .action-btn { background: none; border: 1px solid #eee; color: #777; padding: 4px 10px; font-size: 11px; cursor: pointer; border-radius: 3px; }
         .action-btn:hover { border-color: #111; color: #111; }
         .delete-btn:hover { border-color: #ff3b30; color: #ff3b30; }
@@ -106,7 +108,7 @@
         .notice-btn:hover { border-color: #111; color: #fff; background-color: #111; }
 
         /* 댓글 및 대댓글 영역 */
-        .comment-section { border-top: 1px dashed #e5e5e5; background: #fafafa; margin-top: 10px; padding: 15px; border-radius: 4px; }
+        .comment-section { background: #fafafa; padding: 15px; border-radius: 4px; }
         .comment-list { margin-bottom: 10px; }
         .comment-item { font-size: 13px; margin-bottom: 10px; line-height: 1.5; padding-bottom: 8px; border-bottom: 1px solid #f3f3f3; position: relative; }
         .comment-item:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
@@ -154,7 +156,6 @@
         <a class="logo-link" onclick="resetToHome()">🤫 reasn</a>
         
         <div class="user-info-wrapper">
-            <!-- 👤 비회원 상태일 땐 로그인 버튼으로 자동 변경 스왑 구역 -->
             <div id="userHeaderArea">
                 <button class="my-profile-trigger" id="userNicknameBtn" onclick="toggleProfileCard()">로딩 회원</button>
             </div>
@@ -178,8 +179,7 @@
     
     <div class="container">
         
-        <!-- 📋 [1. 메인 리스트 뷰 섹션] -->
-        <div id="listModeSection" class="listViewSection">
+        <div id="listModeSection" class="view-section listViewSection">
             <div class="board-controls">
                 <div class="category-tabs">
                     <button class="category-btn active" id="tab-자유게시판" onclick="changeCategory('자유게시판')">자유게시판</button>
@@ -198,13 +198,25 @@
             <div class="pagination" id="paginationBox"></div>
         </div>
 
-        <!-- ✍️ [2. 전체 화면 전환형 글 작성 뷰 섹션] -->
-        <div id="writeModeSection" class="writeViewSection">
+        <div id="detailModeSection" class="view-section detailViewSection">
+            <div class="detail-title" id="dtPostTitle">게시글 제목 영역</div>
+            <div class="detail-meta" id="dtPostMeta">작성자 정보 및 시간 라인</div>
+            <div class="detail-content" id="dtPostContent">본문 내용 들어가는 곳</div>
+            
+            <div class="action-buttons" id="dtActionButtons"></div>
+            
+            <div class="comment-section" id="dtCommentSection"></div>
+            
+            <div class="write-btn-group" style="margin-top: 20px;">
+                <button class="submit-btn cancel-btn" onclick="switchToListView()">🔙 목록으로 돌아가기</button>
+            </div>
+        </div>
+
+        <div id="writeModeSection" class="view-section writeViewSection">
             <div class="write-view-title" id="writeFormTitle">새 글 작성하기</div>
             <input type="text" id="postTitle" class="title-input" placeholder="제목을 입력하세요">
             <textarea id="box" class="content-textarea" placeholder="생각이나 이야기를 채워주세요..."></textarea>
             
-            <!-- 관리자 전용 공지사항 체크라인 -->
             <div class="notice-check-wrapper" id="adminNoticeCheckLine">
                 <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer;">
                     <input type="checkbox" id="postIsNotice"> 📌 이 게시글을 상단 고정 공지사항으로 등록
@@ -219,7 +231,6 @@
 
     </div>
 
-    <!-- 비밀번호 변경 모달 -->
     <div class="modal-overlay" id="passwordModal">
         <div class="modal-content">
             <span class="modal-close" onclick="closePasswordModal()">&times;</span>
@@ -234,20 +245,21 @@
         var writeTargetCategory = '자유게시판'; 
         
         var myName = '비회원';
-        var myRole = 'GUEST'; // 로그인 미진행 상태 초기값 처리 변경
+        var myRole = 'GUEST'; 
         var myEmail = 'unknown';
         var myPoints = 0;    
         var myCreatedAt = '-';
         var supabaseClient = null;
         
         var fetchedPostsCache = []; 
+        var activePostComments = []; // 현재 보고 있는 글의 댓글 저장소
         var editTargetPostId = null; 
+        var currentOpenedPostId = null; // 현재 상세보기 중인 글 ID
 
         var currentPage = 1;
         var postsPerPage = 10;
 
         window.onload = function() {
-            // 강제 추방 트랩 완벽 제거 (접속은 스무스하게 보장 완료)
             try {
                 if (window.localStorage && localStorage.getItem('reasn_user_email')) {
                     myName = localStorage.getItem('reasn_user_name') || '회원';
@@ -285,7 +297,6 @@
             try {
                 const { data: dataSession } = await supabaseClient.auth.getSession();
                 
-                // 만약 세션 토큰 검사 시 비회원으로 최종 확인되면 게스트 표출 장치 작동
                 if (!dataSession || !dataSession.session) {
                     myRole = 'GUEST';
                     myEmail = 'unknown';
@@ -332,7 +343,6 @@
                 const wrapper = document.getElementById('userHeaderArea');
                 if(!wrapper) return;
 
-                // 👤 비회원(GUEST)일 때 우측 상단을 깔끔한 [로그인하기] 단추로 체인지
                 if (myRole === 'GUEST') {
                     wrapper.innerHTML = `<button class="login-gate-btn" onclick="window.location.href='index.html'">로그인하기</button>`;
                 } else {
@@ -377,12 +387,12 @@
                     if (window.localStorage) localStorage.setItem('reasn_user_name', newNick);
                     document.getElementById('myProfileCard').style.display = 'none'; 
                     updateUserUI(); displayPosts(); 
+                    if(currentOpenedPostId) loadPostDetailView(currentOpenedPostId); // 상세창 열려있으면 동기화
                 }
             } catch(e) { alert('처리 중 오류가 발생했습니다.'); }
         }
 
         function switchToWriteView() {
-            // 비회원이 글쓰기 시도를 하면 차단
             if (myRole === 'GUEST') {
                 alert('🔒 글 작성은 로그인 후 회원만 가능합니다.');
                 window.location.href = 'index.html';
@@ -401,16 +411,24 @@
             var ck = document.getElementById('postIsNotice');
             if(ck) ck.checked = false;
 
-            document.getElementById('listModeSection').style.display = 'none';
+            hideAllSections();
             document.getElementById('writeModeSection').style.display = 'flex';
             window.scrollTo({ top: 0 });
         }
 
         function switchToListView() {
             editTargetPostId = null;
-            document.getElementById('writeModeSection').style.display = 'none';
+            currentOpenedPostId = null;
+            hideAllSections();
             document.getElementById('listModeSection').style.display = 'block';
             window.scrollTo({ top: 0 });
+            displayPosts(); // 리스트 정보 최신화 리로드
+        }
+
+        function hideAllSections() {
+            document.getElementById('listModeSection').style.display = 'none';
+            document.getElementById('writeModeSection').style.display = 'none';
+            document.getElementById('detailModeSection').style.display = 'none';
         }
 
         function resetToHome() {
@@ -449,6 +467,7 @@
             });
         }
 
+         Zion
         function openPasswordModal() { 
             if(myRole === 'GUEST') return;
             document.getElementById('myProfileCard').style.display = 'none'; 
@@ -493,7 +512,7 @@
                     else btn.classList.remove('active');
                 });
             } catch(e){}
-            displayPosts();
+            switchToListView();
         }
 
         async function savePost() {
@@ -514,7 +533,11 @@
                         .eq('id', editTargetPostId);
                         
                     if (error) alert('수정 실패: ' + error.message);
-                    else { switchToListView(); displayPosts(); }
+                    else { 
+                        alert('글 수정이 완료되었습니다.');
+                        currentOpenedPostId = editTargetPostId;
+                        loadPostDetailView(editTargetPostId); // 수정 완료 후 다시 상세보기 화면 진입
+                    }
                 } catch(e){ alert('수정 처리 오류'); }
             } else {
                 let displayAuthor = myName;
@@ -544,8 +567,6 @@
                     
                     currentCategory = writeTargetCategory;
                     changeCategory(currentCategory);
-                    
-                    updateUserUI(); switchToListView(); displayPosts(); 
                 } catch(e) { alert('통신 오류'); }
             }
         }
@@ -638,13 +659,13 @@
 
             let allComments = [];
             try {
-                const { data: commentsData } = await supabaseClient.from('reasn_comments').select('*').order('created_at', { ascending: true });
+                const { data: commentsData } = await supabaseClient.from('reasn_comments').select('post_id');
                 if (commentsData) allComments = commentsData;
             } catch(cErr) {}
 
             for (var i = 0; i < postsList.length; i++) {
                 const post = postsList[i];
-                const postComments = allComments.filter(c => c.post_id == post.id);
+                const commentCount = allComments.filter(c => c.post_id == post.id).length;
 
                 var newPost = document.createElement('div');
                 newPost.className = 'post';
@@ -652,9 +673,10 @@
                 if (post.is_notice === true) newPost.style.backgroundColor = '#fcfcfc';
                 else if (post.is_hidden === true) newPost.style.backgroundColor = '#fff6e6';
 
+                newPost.setAttribute('onclick', `handlePostClick(${post.id})`);
+
                 var postHeader = document.createElement('div');
                 postHeader.className = 'post-header';
-                postHeader.setAttribute('onclick', `togglePostBody(${post.id})`);
 
                 var titleLine = document.createElement('div');
                 titleLine.className = 'post-title-line';
@@ -664,7 +686,7 @@
                 
                 titleLine.innerHTML = `
                     ${numberOrNoticeLabel}
-                    <span style="${post.is_notice === true ? 'font-weight:bold;' : ''}">${tabularLabel}${post.title || '제목 없음'}<span class="comment-count-badge">(${postComments.length})</span></span>
+                    <span style="${post.is_notice === true ? 'font-weight:bold;' : ''}">${tabularLabel}${post.title || '제목 없음'}<span class="comment-count-badge">(${commentCount})</span></span>
                 `;
                 
                 var metaLine = document.createElement('div');
@@ -675,11 +697,8 @@
                 if (postRole !== 'ADMIN' && currentCategory === '익명게시판') displayAuthorName = '익명';
 
                 var authorSpan = document.createElement('span');
-                authorSpan.className = 'clickable-author' + (myRole === 'ADMIN' && post.user_email && post.user_email !== 'unknown' && postRole === 'USER' ? ' can-upgrade' : '');
+                authorSpan.className = 'clickable-author';
                 authorSpan.innerText = displayAuthorName;
-                if(myRole === 'ADMIN' && post.user_email && post.user_email !== 'unknown' && postRole === 'USER') {
-                    authorSpan.setAttribute('onclick', `event.stopPropagation(); adminUpgradeUser('${post.user_email}', '${post.user_name}')`);
-                }
                 metaLine.appendChild(authorSpan);
 
                 if (displayAuthorName !== '익명' && displayAuthorName !== '비회원') {
@@ -690,50 +709,122 @@
 
                 postHeader.appendChild(titleLine); postHeader.appendChild(metaLine);
                 newPost.appendChild(postHeader);
+                board.appendChild(newPost);
+            }
+        }
 
-                var postBody = document.createElement('div');
-                postBody.className = 'post-body'; postBody.id = `post-body-${post.id}`;
+        // 🔒 [보안 방어벽 및 화면 전환 트랩 인터셉터]
+        function handlePostClick(postId) {
+            if (myRole === 'GUEST') {
+                alert('🔒 게시글 내용과 댓글은 로그인한 회원만 열람할 수 있습니다. 먼저 로그인해 주세요!');
+                window.location.href = 'index.html';
+                return;
+            }
+            if (currentCategory === '익명게시판' && myRole !== 'VIP' && myRole !== 'ADMIN') {
+                alert('🔒 익명게시판의 글 내용과 댓글은 VIP 등급만 열람할 수 있습니다. 자유게시판에서 포인트를 쌓아 등업해 주세요!');
+                return; 
+            }
+            
+            // 검증 통과 시 전용 상세보기 단독 페이지 로드 진행
+            loadPostDetailView(postId);
+        }
 
-                var contentTag = document.createElement('div');
-                contentTag.className = 'post-content'; contentTag.id = `post-text-${post.id}`;
-                contentTag.innerHTML = convertLinks(post.content);
-                postBody.appendChild(contentTag);
+        // 👁️ [핵심 추가] 글 상세 정보 단독 데이터 조회 및 렌더링 함수
+        async function loadPostDetailView(postId) {
+            currentOpenedPostId = postId;
+            hideAllSections();
+            
+            const detailSection = document.getElementById('detailModeSection');
+            detailSection.style.display = 'flex';
+            window.scrollTo({ top: 0 });
 
-                var timeTag = document.createElement('div');
-                timeTag.className = 'post-time';
-                timeTag.innerText = post.created_at ? new Date(post.created_at).toLocaleString('ko-KR') : '';
-                postBody.appendChild(timeTag);
+            document.getElementById('dtPostTitle').innerText = '불러오는 중...';
+            document.getElementById('dtPostMeta').innerHTML = '';
+            document.getElementById('dtPostContent').innerText = '';
+            document.getElementById('dtActionButtons').innerHTML = '';
+            document.getElementById('dtCommentSection').innerHTML = '댓글 로딩 중...';
 
-                var btnGroup = document.createElement('div');
-                btnGroup.className = 'action-buttons';
+            try {
+                // 1. 해당 게시글 데이터 실시간 단건 추출
+                const { data: post, error } = await supabaseClient.from('reasn_posts').select('*').eq('id', postId).single();
+                if(error || !post) {
+                    document.getElementById('dtPostTitle').innerText = '존재하지 않거나 삭제된 게시글입니다.';
+                    return;
+                }
 
+                // 2. 상단 글 영역 렌더링
+                let tabularLabel = post.is_hidden === true ? '[숨김보관] ' : '';
+                document.getElementById('dtPostTitle').innerText = tabularLabel + (post.title || '제목 없음');
+                
+                let displayAuthorName = post.user_name || '회원';
+                let postRole = post.user_role || 'USER';
+                if (postRole !== 'ADMIN' && currentCategory === '익명게시판') displayAuthorName = '익명';
+
+                let badgeHtml = (displayAuthorName !== '익명' && displayAuthorName !== '비회원') 
+                    ? `<span class="author-badge badge-${postRole.toLowerCase()}">${postRole}</span>` : '';
+                
+                let timeStr = post.created_at ? new Date(post.created_at).toLocaleString('ko-KR') : '';
+                
+                // 관리자용 등업 유도 트리거 포함 처리
+                let authorClickAttr = (myRole === 'ADMIN' && post.user_email && post.user_email !== 'unknown' && postRole === 'USER')
+                    ? `class="clickable-author can-upgrade" onclick="adminUpgradeUser('${post.user_email}', '${post.user_name}')"` : `class="clickable-author"`;
+
+                document.getElementById('dtPostMeta').innerHTML = `
+                    <span ${authorClickAttr}>${displayAuthorName}</span> ${badgeHtml}
+                    <span style="color:#ccc; margin:0 4px;">|</span>
+                    <span style="color:#aaa; font-size:12px;">${timeStr}</span>
+                `;
+
+                document.getElementById('dtPostContent').innerHTML = convertLinks(post.content);
+
+                // 3. 권한별 수정 / 삭제 / 공지 제어 단추 조립
+                var btnGroup = document.getElementById('dtActionButtons');
+                btnGroup.innerHTML = '';
+                
                 if (myRole === 'ADMIN' || (post.user_email && post.user_email !== 'unknown' && post.user_email === myEmail)) {
                     btnGroup.innerHTML += `
-                        <button class="action-btn" onclick="switchToEditView(event, ${post.id}, '${post.title.replace(/'/g, "\\'")}', ${post.is_notice})">수정</button>
-                        <button class="action-btn delete-btn" onclick="deletePost(event, ${post.id})">삭제</button>
+                        <button class="action-btn" onclick="switchToEditView(${post.id}, '${post.title.replace(/'/g, "\\'")}', ${post.is_notice})">수정</button>
+                        <button class="action-btn delete-btn" onclick="deletePost(${post.id})">삭제</button>
                     `;
                 }
                 if (myRole === 'ADMIN') {
                     var hideToggleText = post.is_hidden === true ? '숨김 해제' : '숨김';
                     var noticeToggleText = post.is_notice === true ? '공지 해제' : '공지 설정';
                     btnGroup.innerHTML += `
-                        <button class="action-btn hide-btn" onclick="toggleHidePost(event, ${post.id}, ${post.is_hidden})">${hideToggleText}</button>
-                        <button class="action-btn move-btn" onclick="movePostCategory(event, ${post.id})">이동</button>
-                        <button class="action-btn notice-btn" onclick="toggleNoticePost(event, ${post.id}, ${post.is_notice})">${noticeToggleText}</button>
+                        <button class="action-btn hide-btn" onclick="toggleHidePost(${post.id}, ${post.is_hidden})">${hideToggleText}</button>
+                        <button class="action-btn move-btn" onclick="movePostCategory(${post.id})">이동</button>
+                        <button class="action-btn notice-btn" onclick="toggleNoticePost(${post.id}, ${post.is_notice})">${noticeToggleText}</button>
                     `;
                 }
-                if (btnGroup.innerHTML !== '') postBody.appendChild(btnGroup);
+                if(btnGroup.innerHTML === '') btnGroup.style.display = 'none';
+                else btnGroup.style.display = 'flex';
 
-                // 댓글 영역
-                var commentSection = document.createElement('div');
-                commentSection.className = 'comment-section';
+                // 4. 해당 글 전용 댓글 실시간 조회 및 출력
+                await reloadCommentsArea(postId);
+
+            } catch(e) {
+                document.getElementById('dtPostTitle').innerText = '서버 통신 오류가 발생했습니다.';
+            }
+        }
+
+        // 💬 현재 글의 댓글 구역만 쏙 부분 리로드하는 함수
+        async function reloadCommentsArea(postId) {
+            const commentSection = document.getElementById('dtCommentSection');
+            if(!commentSection) return;
+
+            try {
+                const { data: comments, error } = await supabaseClient.from('reasn_comments').select('*').eq('post_id', postId).order('created_at', { ascending: true });
+                if(error) { commentSection.innerHTML = '댓글을 가져오지 못했습니다.'; return; }
+
+                commentSection.innerHTML = '';
+                
                 var commentList = document.createElement('div');
                 commentList.className = 'comment-list';
 
                 let anonymousMap = new Map();
                 let anonCounter = 1;
 
-                postComments.forEach(comment => {
+                comments.forEach(comment => {
                     var commentItem = document.createElement('div');
                     var isSub = comment.content && comment.content.startsWith('↳ ');
                     commentItem.className = 'comment-item' + (isSub ? ' sub-comment' : '');
@@ -762,34 +853,32 @@
                         `;
                     }
 
-                    var replyTriggerHtml = !isSub ? `<span class="comment-reply-trigger" onclick="setupSubCommentInput(${post.id}, '${commentAuthorName}')">답글</span>` : "";
+                    var replyTriggerHtml = !isSub ? `<span class="comment-reply-trigger" onclick="setupSubCommentInput('${commentAuthorName}')">답글</span>` : "";
 
                     commentItem.innerHTML = `${badgeHtml}<span class="comment-author">${commentAuthorName}</span><span>${comment.content || ''}</span>${actionHtml}${replyTriggerHtml}`;
                     commentList.appendChild(commentItem);
                 });
+                
                 commentSection.appendChild(commentList);
 
+                // 댓글 입력 인풋창 연결
                 var inputFlex = document.createElement('div');
                 inputFlex.className = 'comment-input-box';
                 inputFlex.innerHTML = `
-                    <input type="text" class="comment-input" id="reply-input-${post.id}" placeholder="댓글을 입력하세요...">
-                    <button class="comment-btn" onclick="saveComment(${post.id})">등록</button>
+                    <input type="text" class="comment-input" id="dtReplyInput" placeholder="댓글을 입력하세요...">
+                    <button class="comment-btn" onclick="saveComment(${postId})">등록</button>
                 `;
                 commentSection.appendChild(inputFlex);
-                postBody.appendChild(commentSection);
-                
-                newPost.appendChild(postBody);
-                board.appendChild(newPost);
-            }
+
+            } catch(ce) { commentSection.innerHTML = '댓글 렌더링 트래픽 지연'; }
         }
 
-        function switchToEditView(event, postId, oldTitle, isNoticeStatus) {
-            if(event) event.stopPropagation();
+        function switchToEditView(postId, oldTitle, isNoticeStatus) {
             if(myRole === 'GUEST') return;
             editTargetPostId = postId;
             writeTargetCategory = currentCategory; 
             
-            var oldContent = document.getElementById(`post-text-${postId}`).innerText;
+            var oldContent = document.getElementById(`dtPostContent`).innerText;
             
             document.getElementById('writeFormTitle').innerText = '게시글 수정하기';
             document.getElementById('postTitle').value = oldTitle;
@@ -800,20 +889,19 @@
             
             document.getElementById('writeSubmitBtn').innerText = '확인';
             
-            document.getElementById('listModeSection').style.display = 'none';
+            hideAllSections();
             document.getElementById('writeModeSection').style.display = 'flex';
             window.scrollTo({ top: 0 });
         }
 
-        async function toggleNoticePost(event, postId, currentNoticeStatus) {
-            if(event) event.stopPropagation();
+        async function toggleNoticePost(postId, currentNoticeStatus) {
             if(!supabaseClient || myRole !== 'ADMIN') return;
             var nextStatus = !currentNoticeStatus;
             if(!confirm(nextStatus ? '이 게시글을 상단 고정 공지사항으로 등록하시겠습니까?' : '이 게시글의 상단 고정 공지 설정을 해제하시겠습니까?')) return;
             try {
                 const { error } = await supabaseClient.from('reasn_posts').update({ is_notice: nextStatus }).eq('id', postId);
                 if (error) alert('공지 실패: ' + error.message);
-                else displayPosts();
+                else loadPostDetailView(postId);
             } catch(e) { alert('오류 발생'); }
         }
 
@@ -825,7 +913,7 @@
             try {
                 const { error } = await supabaseClient.from('reasn_comments').update({ content: newText.trim() }).eq('id', commentId);
                 if (error) alert('댓글 수정 실패: ' + error.message);
-                else displayPosts();
+                else if(currentOpenedPostId) reloadCommentsArea(currentOpenedPostId);
             } catch(e) { alert('오류 발생'); }
         }
 
@@ -835,24 +923,22 @@
             try {
                 const { error } = await supabaseClient.from('reasn_comments').delete().eq('id', commentId);
                 if (error) alert('댓글 삭제 실패: ' + error.message);
-                else displayPosts();
+                else if(currentOpenedPostId) reloadCommentsArea(currentOpenedPostId);
             } catch(e) { alert('오류 발생'); }
         }
 
-        async function toggleHidePost(event, postId, currentHiddenStatus) {
-            if(event) event.stopPropagation();
+        async function toggleHidePost(postId, currentHiddenStatus) {
             if(!supabaseClient || myRole !== 'ADMIN') return;
             var nextStatus = !currentHiddenStatus; 
             if (!confirm(nextStatus ? '이 글을 일반 유저들에게 숨기고 보관함으로 이동시키겠습니까?' : '이 글의 숨김 처리를 해제하고 일반 유저들에게 다시 노출하시겠습니까?')) return;
             try {
                 const { error } = await supabaseClient.from('reasn_posts').update({ is_hidden: nextStatus }).eq('id', postId);
                 if (error) alert('숨김 실패: ' + error.message);
-                else displayPosts();
+                else loadPostDetailView(postId);
             } catch(e) { alert('오류 발생'); }
         }
 
-        async function movePostCategory(event, postId) {
-            if(event) event.stopPropagation();
+        async function movePostCategory(postId) {
             if(!supabaseClient || myRole !== 'ADMIN') return;
             var targetBoard = prompt('이 글을 어느 게시판으로 옮기시겠습니까?\n\n1: 자유게시판\n2: 익명게시판\n3: 건의해요');
             if (targetBoard === null) return;
@@ -861,41 +947,27 @@
             try {
                 const { error } = await supabaseClient.from('reasn_posts').update({ category: targetCategory }).eq('id', postId);
                 if (error) alert('이동 실패: ' + error.message);
-                else { alert(`✅ [${targetCategory}]으로 이동 완료!`); displayPosts(); }
+                else { 
+                    alert(`✅ [${targetCategory}]으로 이동 완료!`); 
+                    currentCategory = targetCategory;
+                    switchToListView(); 
+                }
             } catch(e) {}
         }
 
-        function setupSubCommentInput(postId, targetAuthor) {
+        function setupSubCommentInput(targetAuthor) {
             if(myRole === 'GUEST') return;
-            var input = document.getElementById('reply-input-' + postId);
+            var input = document.getElementById('dtReplyInput');
             if(input) { input.value = `↳ @${targetAuthor} `; input.focus(); }
         }
 
-        // 🔒 [보안 방어벽 개정]: GUEST 등급은 글 리스트 터치 시 내용이 펼쳐지지 않고 로그인 유도 경고 작동
-        function togglePostBody(postId) {
-            try {
-                if (myRole === 'GUEST') {
-                    alert('🔒 게시글 내용과 댓글은 로그인한 회원만 열람할 수 있습니다. 먼저 로그인해 주세요!');
-                    window.location.href = 'index.html';
-                    return; // 차단 장치
-                }
-                if (currentCategory === '익명게시판' && myRole !== 'VIP' && myRole !== 'ADMIN') {
-                    alert('🔒 익명게시판의 글 내용과 댓글은 VIP 등급만 열람할 수 있습니다. 자유게시판에서 포인트를 쌓아 등업해 주세요!');
-                    return; 
-                }
-                var body = document.getElementById(`post-body-${postId}`);
-                if (body) body.style.display = (body.style.display === 'block') ? 'none' : 'block';
-            } catch(e){}
-        }
-
-        async function deletePost(event, postId) {
-            if(event) event.stopPropagation();
+        async function deletePost(postId) {
             if(myRole === 'GUEST') return;
             try {
                 if (!confirm('정말 이 글을 완전히 삭제하시겠습니까?')) return;
                 const { error } = await supabaseClient.from('reasn_posts').delete().eq('id', postId);
                 if (error) alert('삭제 실패: ' + error.message);
-                else displayPosts();
+                else { alert('글이 정상적으로 삭제되었습니다.'); switchToListView(); }
             } catch(e){}
         }
 
@@ -906,7 +978,7 @@
                 window.location.href = 'index.html';
                 return;
             }
-            var input = document.getElementById('reply-input-' + postId);
+            var input = document.getElementById('dtReplyInput');
             var text = input ? input.value.trim() : "";
             if (!text) return alert('댓글 내용을 입력해주세요!');
 
@@ -922,9 +994,7 @@
                 if (error) alert('댓글 등록 실패: ' + error.message);
                 else {
                     if(input) input.value = '';
-                    await displayPosts();
-                    const body = document.getElementById(`post-body-${postId}`);
-                    if (body) body.style.display = 'block';
+                    await reloadCommentsArea(postId);
                 }
             } catch(e){}
         }
