@@ -650,8 +650,15 @@
             document.getElementById('writeModal').style.display = 'flex';
         }
 
+// 🔒 [권한 제한 규칙] VIP가 아니면 익명게시판 본문/댓글 열람 원천 차단
         function togglePostBody(postId) {
             try {
+                // USER 등급이 익명게시판 글을 열려고 할 때 차단
+                if (currentCategory === '익명게시판' && myRole !== 'VIP' && myRole !== 'ADMIN') {
+                    alert('🔒 익명게시판의 글 내용과 댓글은 VIP 등급만 열람할 수 있습니다. 자유게시판에서 포인트를 쌓아 등업해 주세요!');
+                    return; // 함수를 즉시 종료하여 본문이 절대 열리지 않게 방어
+                }
+
                 var body = document.getElementById(`post-body-${postId}`);
                 if (body) body.style.display = (body.style.display === 'block') ? 'none' : 'block';
             } catch(e){}
