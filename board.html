@@ -94,6 +94,7 @@
         .post-body { display: none; padding: 15px 4px 5px 4px; }
         .post-content { font-size: 14px; line-height: 1.6; color: #222; margin-bottom: 12px; white-space: pre-wrap; word-break: break-all; }
         .post-content a { color: #007bff; text-decoration: underline; }
+        .post-content a:hover { text-decoration: underline; }
         .post-time { font-size: 11px; color: #bbb; margin-bottom: 12px; }
         
         .action-buttons { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
@@ -163,7 +164,6 @@
                 
                 <div class="header-btns">
                     <div class="btn-row">
-                        <!-- ✍️ 닉네임 변경 버튼 신설 연동 -->
                         <button class="top-btn" onclick="changeNicknamePrompt()">닉네임 변경</button>
                         <button class="top-btn" onclick="openPasswordModal()">비밀번호 수정</button>
                     </div>
@@ -228,6 +228,8 @@
 
     <script>
         var currentCategory = '자유게시판';
+        var writeTargetCategory = '자유게시판'; 
+        
         var myName = '회원';
         var myRole = 'USER';
         var myEmail = 'unknown';
@@ -242,6 +244,13 @@
         var postsPerPage = 10;
 
         window.onload = function() {
+            // 🔒 [보안 방어벽 1차 트랩]: 로컬스토리지에 가입 이메일 데이터조차 없다면 로그인 안 한 비회원이므로 즉시 로그인 화면으로 튕구기
+            if (window.localStorage && !localStorage.getItem('reasn_user_email')) {
+                alert('🔒 로그인 후 이용 가능합니다.');
+                window.location.href = 'index.html';
+                return;
+            }
+
             try {
                 if (window.localStorage) {
                     myName = localStorage.getItem('reasn_user_name') || '회원';
@@ -278,6 +287,15 @@
             if (!supabaseClient) return;
             try {
                 const { data: dataSession } = await supabaseClient.auth.getSession();
+                
+                // 🔒 [보안 방어벽 2차 트랩]: 수파베이스 실시간 서버 세션 인증 토큰이 없거나 파기된 상태라면 원천 차단 추방 실행
+                if (!dataSession || !dataSession.session) {
+                    if (window.localStorage) localStorage.clear();
+                    alert('🔒 로그인이 만료되었거나 권한이 없습니다.');
+                    window.location.href = 'index.html';
+                    return;
+                }
+
                 if (dataSession && dataSession.session && dataSession.session.user) {
                     const user = dataSession.session.user;
                     myName = user.user_metadata.display_name || myName;
@@ -338,17 +356,15 @@
             } catch(e) {}
         }
 
-        // ✍️ [사양 반영] 인라인 닉네임 변경 런타임 제어 엔진 함수
         async function changeNicknamePrompt() {
             if(!supabaseClient) return;
             var newNick = prompt('변경할 새로운 닉네임을 입력하세요 (최대 10자):', myName);
-            if(newNick === null) return; // 취소
+            if(newNick === null) return; 
             newNick = newNick.trim();
             if(!newNick) return alert('닉네임은 공백일 수 없습니다!');
             if(newNick.length > 10) return alert('닉네임은 최대 10자까지만 가능합니다!');
 
             try {
-                // 수파베이스 서버 메타데이터 교체 실행
                 const { error } = await supabaseClient.auth.updateUser({
                     data: { display_name: newNick }
                 });
@@ -358,10 +374,9 @@
                     alert(`✅ 닉네임이 "${newNick}"(으)로 성공적으로 변경되었습니다!`);
                     myName = newNick;
                     if (window.localStorage) localStorage.setItem('reasn_user_name', newNick);
-                    
-                    document.getElementById('myProfileCard').style.display = 'none'; // 내 정보 창 닫기
-                    updateUserUI(); // 화면 갱신
-                    displayPosts(); // 글 목록 새로고침 (작성자 명칭 동기화 목적)
+                    document.getElementById('myProfileCard').style.display = 'none'; 
+                    updateUserUI(); 
+                    displayPosts(); 
                 }
             } catch(e) { alert('처리 중 오류가 발생했습니다.'); }
         }
@@ -372,7 +387,9 @@
                 return;
             }
             editTargetPostId = null;
-            document.getElementById('writeFormTitle').innerText = currentCategory + ' 글 작성하기';
+            writeTargetCategory = currentCategory; 
+            
+            document.getElementById('writeFormTitle').innerText = writeTargetCategory + ' 글 작성하기';
             document.getElementById('postTitle').value = '';
             document.getElementById('box').value = '';
             var ck = document.getElementById('postIsNotice');
@@ -494,13 +511,13 @@
             } else {
                 let displayAuthor = myName;
                 if (myRole === 'ADMIN') displayAuthor = '관리자';
-                else if (currentCategory === '익명게시판') displayAuthor = '익명';
+                else if (writeTargetCategory === '익명게시판') displayAuthor = '익명'; 
 
                 try {
                     const { error } = await supabaseClient
                         .from('reasn_posts')
                         .insert([{ 
-                            category: currentCategory, 
+                            category: writeTargetCategory, 
                             title: titleText, 
                             content: contentText, 
                             user_name: displayAuthor, 
@@ -511,11 +528,14 @@
                         
                     if (error) return alert('글 등록 실패: ' + error.message);
 
-                    if (currentCategory === '자유게시판' && myRole === 'USER') {
+                    if (writeTargetCategory === '자유게시판' && myRole === 'USER') {
                         myPoints += 10; 
                         localStorage.setItem('reasn_user_points', myPoints);
                         try { await supabaseClient.auth.updateUser({ data: { points: myPoints } }); } catch(uErr) {}
                     }
+                    
+                    currentCategory = writeTargetCategory;
+                    changeCategory(currentCategory);
                     
                     updateUserUI(); 
                     switchToListView(); 
@@ -535,6 +555,9 @@
         }
 
         async function displayPosts() {
+            // 🔒 [안전 예외 필터링]: 혹시라도 주소치고 들어와 비동기 패치가 돌 때 세션 정보가 없으면 즉시 컨텐트 차단
+            if (!supabaseClient || myEmail === 'unknown') return;
+
             var board = document.getElementById('board');
             if (!board) return;
             board.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px; font-size:13px;">불러오는 중...</p>';
@@ -760,6 +783,7 @@
         function switchToEditView(event, postId, oldTitle, isNoticeStatus) {
             if(event) event.stopPropagation();
             editTargetPostId = postId;
+            writeTargetCategory = currentCategory; 
             
             var oldContent = document.getElementById(`post-text-${postId}`).innerText;
             
