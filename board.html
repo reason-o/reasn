@@ -67,7 +67,8 @@
         .action-btn { background: none; border: 1px solid #eee; color: #777; padding: 4px 10px; font-size: 11px; cursor: pointer; border-radius: 3px; }
         .action-btn:hover { border-color: #111; color: #111; }
         .delete-btn:hover { border-color: #ff3b30; color: #ff3b30; }
-        .hide-btn:hover { border-color: #ff9500; color: #ff9500; } /* 숨김 버튼 호버 스타일 */
+        .hide-btn:hover { border-color: #ff9500; color: #ff9500; }
+        .move-btn:hover { border-color: #007bff; color: #007bff; } /* 이동 버튼 호버 스타일 */
 
         /* 댓글 및 대댓글 영역 */
         .comment-section { border-top: 1px dashed #e5e5e5; background: #fafafa; margin-top: 10px; padding: 15px; border-radius: 4px; }
@@ -390,7 +391,6 @@
             board.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px; font-size:13px;">불러오는 중...</p>';
 
             try {
-                // 🔒 [숨김 처리 조건 연동] 일반 유저는 is_hidden이 false인 것만 필터링, 관리자는 전체 다 불러옴
                 let query = supabaseClient.from('reasn_posts').select('*').eq('category', currentCategory);
                 
                 if (myRole !== 'ADMIN') {
@@ -483,7 +483,6 @@
                 var newPost = document.createElement('div');
                 newPost.className = 'post';
 
-                // 만약 숨겨진 글이라면 관리자 눈에 구별하기 쉽게 블러 및 안내 스타일 가미
                 if (post.is_hidden === true) {
                     newPost.style.backgroundColor = '#fff6e6';
                 }
@@ -495,11 +494,10 @@
                 var titleLine = document.createElement('div');
                 titleLine.className = 'post-title-line';
                 
-                // 숨김 글 표시 헤드 텍스트 추가
-                var hiddenLabel = post.is_hidden === true ? '<span style="color:#ff9500; font-size:12px; font-weight:bold; margin-right:5px;">[숨김보관]</span>' : '';
+                var tabularLabel = post.is_hidden === true ? '<span style="color:#ff9500; font-size:12px; font-weight:bold; margin-right:5px;">[숨김보관]</span>' : '';
                 titleLine.innerHTML = `
                     <span class="post-num">${post.local_num}</span> 
-                    <span>${hiddenLabel}${post.title || '제목 없음'}<span class="comment-count-badge">(${postComments.length})</span></span>
+                    <span>${tabularLabel}${post.title || '제목 없음'}<span class="comment-count-badge">(${postComments.length})</span></span>
                 `;
                 
                 var metaLine = document.createElement('div');
@@ -549,7 +547,6 @@
                 var btnGroup = document.createElement('div');
                 btnGroup.className = 'action-buttons';
 
-                // 본인 글이거나 관리자일 때 수정/삭제 권한 부여
                 if (myRole === 'ADMIN' || (post.user_email && post.user_email !== 'unknown' && post.user_email === myEmail)) {
                     btnGroup.innerHTML += `
                         <button class="action-btn" onclick="openEditModal(event, ${post.id}, '${post.title.replace(/'/g, "\\'")}')">수정</button>
@@ -557,11 +554,11 @@
                     `;
                 }
                 
-                // 🔒 [숨김 처리 기능 단추 배치] 오직 최고 관리자(ADMIN)만 활성화 가능
                 if (myRole === 'ADMIN') {
                     var hideToggleText = post.is_hidden === true ? '숨김 해제' : '숨김';
                     btnGroup.innerHTML += `
                         <button class="action-btn hide-btn" onclick="toggleHidePost(event, ${post.id}, ${post.is_hidden})">${hideToggleText}</button>
+                        <button class="action-btn move-btn" onclick="movePostCategory(event, ${post.id})">이동</button>
                     `;
                 }
                 
@@ -621,28 +618,54 @@
             }
         }
 
-        // 🔒 [관리자 전용 숨김/숨김해제 원격 토글 제어 함수]
+        // 🚀 [관리자 전용 원격 게시글 이사(이동) 제어 로직]
+        async function movePostCategory(event, postId) {
+            if(event) event.stopPropagation();
+            if(!supabaseClient || myRole !== 'ADMIN') return;
+
+            var targetBoard = prompt('이 글을 어느 게시판으로 옮기시겠습니까?\n\n1: 자유게시판\n2: 익명게시판\n3: 건의해요\n\n(숫자 1, 2, 3 중 하나만 입력하세요)');
+            
+            if (targetBoard === null) return; // 취소 누르면 중단
+
+            let targetCategory = '';
+            if (targetBoard === '1') targetCategory = '자유게시판';
+            else if (targetBoard === '2') targetCategory = '익명게시판';
+            else if (targetBoard === '3') targetCategory = '건의해요';
+            else return alert('잘못된 입력입니다. 숫자 1, 2, 3 중에서만 골라 입력해 주세요!');
+
+            if (targetCategory === currentCategory) return alert('이미 현재 소속되어 있는 게시판입니다.');
+
+            try {
+                const { error } = await supabaseClient
+                    .from('reasn_posts')
+                    .update({ category: targetCategory })
+                    .eq('id', postId);
+
+                if (error) alert('게시글 이동 실패: ' + error.message);
+                else {
+                    alert(`✅ 글이 [${targetCategory}]으로 성공적으로 순간이동 하였습니다!`);
+                    displayPosts(); // 리스트 갱신
+                }
+            } catch(e) { alert('처리 도중 통신 오류가 발생했습니다.'); }
+        }
+
         async function toggleHidePost(event, postId, currentHiddenStatus) {
             if(event) event.stopPropagation();
             if(!supabaseClient || myRole !== 'ADMIN') return;
 
-            var nextStatus = !currentHiddenStatus; // 상태값 반전
+            var nextStatus = !currentHiddenStatus; 
             var confirmMsg = nextStatus ? '이 글을 일반 유저들에게 숨기고 보관함으로 이동시키겠습니까?' : '이 글의 숨김 처리를 해제하고 일반 유저들에게 다시 노출하시겠습니까?';
             
             if (!confirm(confirmMsg)) return;
 
             try {
-                const { error } = await supabaseClient
-                    .from('reasn_posts')
-                    .update({ is_hidden: nextStatus })
-                    .eq('id', postId);
-
+                const { error } = await supabaseClient.from('reasn_posts').update({ is_hidden: nextStatus }).eq('id', postId);
                 if (error) alert('숨김 처리 실패: ' + error.message);
                 else {
-                    alert(nextStatus ? '글이 안전하게 숨김 처리되었습니다. (관리자만 확인 가능)' : '글의 숨김 처리가 해제되었습니다.');
+                    alert(nextStatus ? '글이 안전하게 숨김 처리되었습니다.' : '글의 숨김 처리가 해제되었습니다.');
                     displayPosts();
                 }
-            } catch(e) { alert('처리 중 오류가 발생했습니다.'); }
+            } catch(e) { alert('오류 발생'); }
         }
 
         function setupSubCommentInput(postId, targetAuthor) {
@@ -668,14 +691,12 @@
             document.getElementById('writeModal').style.display = 'flex';
         }
 
-        // 🔒 [권한 제한 규칙] VIP가 아니면 익명게시판 본문/댓글 열람 원천 차단
         function togglePostBody(postId) {
             try {
                 if (currentCategory === '익명게시판' && myRole !== 'VIP' && myRole !== 'ADMIN') {
                     alert('🔒 익명게시판의 글 내용과 댓글은 VIP 등급만 열람할 수 있습니다. 자유게시판에서 포인트를 쌓아 등업해 주세요!');
                     return; 
                 }
-
                 var body = document.getElementById(`post-body-${postId}`);
                 if (body) body.style.display = (body.style.display === 'block') ? 'none' : 'block';
             } catch(e){}
