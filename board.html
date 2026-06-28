@@ -99,8 +99,6 @@
         .clickable-author.can-upgrade { text-decoration: underline; color: #007bff; }
         
         .author-badge { display: inline-block; padding: 1px 5px; font-size: 9px; font-weight: bold; border-radius: 2px; }
-        .badge-user { background-color: #f0f0f0; color: #666; }
-        .badge-vip { background-color: #e6f0ff; color: #007bff; }
         .badge-admin { background-color: #ffebe6; color: #ff3b30; }
         
         .action-buttons { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; border-bottom: 1px dashed #eee; padding-bottom: 15px; }
@@ -114,7 +112,7 @@
         /* 댓글 및 대댓글 영역 */
         .comment-section { background: #fafafa; padding: 15px; border-radius: 4px; }
         .comment-list { margin-bottom: 10px; }
-        .comment-item { font-size: 13px; margin-bottom: 10px; line-line-height: 1.5; padding-bottom: 8px; border-bottom: 1px solid #f3f3f3; position: relative; }
+        .comment-item { font-size: 13px; margin-bottom: 10px; line-height: 1.5; padding-bottom: 8px; border-bottom: 1px solid #f3f3f3; position: relative; }
         .comment-item:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
         .comment-item.sub-comment { margin-left: 20px; border-left: 2px solid #ddd; padding-left: 10px; background-color: #f7f7f7; margin-top: 5px; }
         
@@ -183,7 +181,6 @@
     
     <div class="container">
         
-        <!-- 📋 [1. 메인 리스트 뷰 섹션] -->
         <div id="listModeSection" class="listViewSection">
             <div class="board-controls">
                 <div class="category-tabs">
@@ -203,7 +200,6 @@
             <div class="pagination" id="paginationBox"></div>
         </div>
 
-        <!-- ✍️ [2. 전체 화면 전환형 글 작성 뷰 섹션] -->
         <div id="writeModeSection" class="writeViewSection view-section">
             <div class="write-view-title" id="writeFormTitle">새 글 작성하기</div>
             <input type="text" id="postTitle" class="title-input" placeholder="제목을 입력하세요">
@@ -221,7 +217,6 @@
             </div>
         </div>
 
-        <!-- 👁️ [3. 전체 화면 전환형 독립 글 상세보기 뷰 섹션] -->
         <div id="detailModeSection" class="detailViewSection view-section">
             <div class="detail-title" id="detPostTitle">제목 로딩 중...</div>
             <div class="detail-meta" id="detPostMeta">작성자 정보 로딩 중...</div>
@@ -229,7 +224,6 @@
             
             <div id="detailActionButtons" class="action-buttons"></div>
             
-            <!-- 독립된 하단 댓글 레이아웃 구역 -->
             <div class="comment-section" style="border-top: 1px solid #111; margin-top:20px;">
                 <div id="detailCommentList" class="comment-list"></div>
                 <div class="comment-input-box">
@@ -245,7 +239,6 @@
 
     </div>
 
-    <!-- 비밀번호 변경 모달 -->
     <div class="modal-overlay" id="passwordModal">
         <div class="modal-content">
             <span class="modal-close" onclick="closePasswordModal()">&times;</span>
@@ -426,7 +419,6 @@
 
         function switchToListView() {
             editTargetPostId = null;
-            // 🧹 리스트 복귀 시 기존 하단 목록 컴포넌트 완벽 삭제 청소
             var oldSubArea = document.getElementById('dtSubListContainerArea');
             if(oldSubArea) oldSubArea.remove();
 
@@ -437,7 +429,6 @@
             displayPosts(); 
         }
 
-        // 🤫 [버그 원인 원천 봉쇄]: 로고 클릭 시에도 기존 하단 상세 리스트를 말끔히 비우고 리스트 이동하도록 함수 개정
         function resetToHome() {
             try { document.getElementById('searchInput').value = ''; } catch(e){}
             var oldSubArea = document.getElementById('dtSubListContainerArea');
@@ -720,9 +711,10 @@
                 authorSpan.innerText = displayAuthorName;
                 metaLine.appendChild(authorSpan);
 
-                if (displayAuthorName !== '익명' && displayAuthorName !== '비회원') {
+                // 👑 일반 회원 뱃지 제거, [관리자]일 때만 뱃지 노출 사양 적용
+                if (postRole === 'ADMIN') {
                     var badge = document.createElement('span');
-                    badge.className = `author-badge badge-${postRole.toLowerCase()}`; badge.innerText = postRole;
+                    badge.className = `author-badge badge-admin`; badge.innerText = '관리자';
                     metaLine.appendChild(badge);
                 }
 
@@ -778,9 +770,8 @@
                 let postRole = post.user_role || 'USER';
                 if (postRole !== 'ADMIN' && currentCategory === '익명게시판') displayAuthorName = '익명';
 
-                let badgeHtml = (displayAuthorName !== '익명' && displayAuthorName !== '비회원') 
-                    ? `<span class="author-badge badge-${postRole.toLowerCase()}">${postRole}</span>` : '';
-                
+                // 👑 상세보기 내부 메타라인도 일반 등급 뱃지 제거 및 관리자용 세팅 동기화
+                let badgeHtml = postRole === 'ADMIN' ? `<span class="author-badge badge-admin">관리자</span>` : '';
                 let timeStr = post.created_at ? new Date(post.created_at).toLocaleString('ko-KR') : '';
                 
                 let authorClickAttr = (myRole === 'ADMIN' && post.user_email && post.user_email !== 'unknown' && postRole === 'USER')
