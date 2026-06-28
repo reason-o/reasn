@@ -10,16 +10,14 @@
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background-color: #ffffff; color: #111; display: flex; flex-direction: column; min-height: 100vh; }
         
-        /* 🤫 reasn 로고 클릭 링크 스타일 추가 */
         header { background-color: #ffffff; color: #111; padding: 20px; text-align: center; font-weight: bold; font-size: 22px; position: relative; letter-spacing: 1px; border-bottom: 1px solid #111; z-index: 10; }
         .logo-link { color: #111; text-decoration: none; cursor: pointer; }
 
-        /* 👤 우측 상단 내 정보 펼침(Dropdown) 카드 가미 */
+        /* 👤 우측 상단 내 정보 펼침 카드 */
         .user-info-wrapper { position: absolute; right: 20px; top: 18px; z-index: 11; display: flex; flex-direction: column; align-items: flex-end; }
         .my-profile-trigger { font-size: 13px; font-weight: 600; color: #111; cursor: pointer; background: #f5f5f5; padding: 4px 10px; border-radius: 20px; border: 1px solid #eee; transition: all 0.2s; }
         .my-profile-trigger:hover { background: #111; color: #fff; border-color: #111; }
         
-        /* 숨겨져 있다가 클릭 시 아래로 열리는 내 정보 박스 */
         .my-profile-card { display: none; margin-top: 5px; background: #ffffff; border: 1px solid #111; padding: 15px; width: 220px; text-align: left; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-radius: 4px; }
         .profile-row { font-size: 12px; color: #333; margin-bottom: 8px; line-height: 1.4; }
         .profile-row strong { color: #111; }
@@ -85,12 +83,19 @@
         /* 댓글 및 대댓글 영역 */
         .comment-section { border-top: 1px dashed #e5e5e5; background: #fafafa; margin-top: 10px; padding: 15px; border-radius: 4px; }
         .comment-list { margin-bottom: 10px; }
-        .comment-item { font-size: 13px; margin-bottom: 10px; line-height: 1.5; padding-bottom: 8px; border-bottom: 1px solid #f3f3f3; }
+        .comment-item { font-size: 13px; margin-bottom: 10px; line-height: 1.5; padding-bottom: 8px; border-bottom: 1px solid #f3f3f3; position: relative; }
         .comment-item:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
         .comment-item.sub-comment { margin-left: 20px; border-left: 2px solid #ddd; padding-left: 10px; background-color: #f7f7f7; margin-top: 5px; }
         
         .comment-author { font-weight: bold; color: #222; margin-right: 6px; }
         .comment-badge { font-size: 9px; padding: 1px 3px; margin-right: 5px; background: #eee; border-radius: 2px; }
+        
+        /* 💬 댓글 내 제어 단추 전용 링크 스타일 */
+        .comment-actions-span { font-size: 11px; color: #888; margin-left: 8px; }
+        .comment-action-link { cursor: pointer; color: #777; text-decoration: none; margin-left: 5px; }
+        .comment-action-link:hover { color: #111; text-decoration: underline; }
+        .comment-del-link:hover { color: #ff3b30 !important; }
+        
         .comment-reply-trigger { font-size: 11px; color: #007bff; cursor: pointer; margin-left: 10px; text-decoration: underline; }
         
         .comment-input-box { display: flex; gap: 8px; margin-top: 10px; }
@@ -167,6 +172,7 @@
         <div class="pagination" id="paginationBox"></div>
     </div>
 
+    <!-- 글쓰기 및 수정 모달 -->
     <div class="modal-overlay" id="writeModal">
         <div class="modal-content">
             <span class="modal-close" onclick="closeModal()">&times;</span>
@@ -178,6 +184,7 @@
         </div>
     </div>
 
+    <!-- 비밀번호 변경 모달 -->
     <div class="modal-overlay" id="passwordModal">
         <div class="modal-content" style="max-width:400px;">
             <span class="modal-close" onclick="closePasswordModal()">&times;</span>
@@ -226,7 +233,6 @@
             displayPosts();
             setTimeout(function() { checkSession(); }, 50);
 
-            // 외부 클릭 시 프로필 카드 닫히는 센스 장치 추가
             document.addEventListener('click', function(e) {
                 var card = document.getElementById('myProfileCard');
                 var trigger = document.getElementById('userNicknameBtn');
@@ -246,11 +252,7 @@
                     myRole = user.user_metadata.role || myRole;
                     myEmail = user.email || myEmail;
                     myPoints = user.user_metadata.points !== undefined ? parseInt(user.user_metadata.points) : myPoints;
-                    
-                    // 가입 날짜 가독성 좋게 추출
-                    if(user.created_at) {
-                        myCreatedAt = new Date(user.created_at).toLocaleDateString('ko-KR');
-                    }
+                    if(user.created_at) myCreatedAt = new Date(user.created_at).toLocaleDateString('ko-KR');
 
                     if (myRole === 'USER') {
                         const { data: upgradeOrders } = await supabaseClient
@@ -280,17 +282,13 @@
 
         function updateUserUI() {
             try {
-                // 상단 버튼은 오직 닉네임과 등급 뱃지만 표시 (정보 노출 히든 처리 완료)
                 const nickBtn = document.getElementById('userNicknameBtn');
                 if (nickBtn) nickBtn.innerText = myName + " (" + myRole + ")";
                 
-                // 안쪽에 숨겨진 카드 내부 렌더링 동기화
                 document.getElementById('profEmail').innerText = myEmail;
                 document.getElementById('profDate').innerText = myCreatedAt;
                 document.getElementById('profRole').innerText = myRole;
-                
-                const profPoints = document.getElementById('profPoints');
-                if (profPoints) profPoints.innerText = myPoints;
+                if (document.getElementById('profPoints')) document.getElementById('profPoints').innerText = myPoints;
 
                 const pointsRow = document.getElementById('profPointsRow');
                 if (pointsRow) {
@@ -305,13 +303,11 @@
             } catch(e) {}
         }
 
-        // 🤫 로고 터치 시 첫 자유게시판의 1페이지로 깔끔 리셋 리턴 함수
         function resetToHome() {
             try { document.getElementById('searchInput').value = ''; } catch(e){}
             changeCategory('자유게시판');
         }
 
-        // 👤 내 정보 토글 스위치 (인라인 모달 형태 구동)
         function toggleProfileCard() {
             var card = document.getElementById('myProfileCard');
             if(!card) return;
@@ -325,7 +321,7 @@
                 const { error } = await supabaseClient.auth.updateUser({ data: { role: 'VIP', points: myPoints } });
                 if (error) alert('등업 실패: ' + error.message);
                 else {
-                    alert('🎉 VIP 등급으로 등업 완료! 이제 익명게시판 열람 및 작성이 가능합니다.');
+                    alert('🎉 VIP 등급으로 등업 완료!');
                     myRole = 'VIP';
                     localStorage.setItem('reasn_user_role', 'VIP');
                     updateUserUI();
@@ -366,7 +362,7 @@
         }
 
         function openPasswordModal() { 
-            document.getElementById('myProfileCard').style.display = 'none'; // 내 카드 일단 닫기
+            document.getElementById('myProfileCard').style.display = 'none'; 
             document.getElementById('passwordModal').style.display = 'flex'; 
         }
         function closePasswordModal() { 
@@ -380,24 +376,19 @@
             try {
                 const { error } = await supabaseClient.auth.updateUser({ password: newPw });
                 if(error) alert('변경 실패: ' + error.message);
-                else {
-                    alert('비밀번호 변경이 정상 완료되었습니다!');
-                    closePasswordModal();
-                }
+                else { alert('비밀번호 변경이 정상 완료되었습니다!'); closePasswordModal(); }
             } catch(e){ alert('처리 중 문제가 발생했습니다.'); }
         }
 
         async function adminUpgradeUser(userEmail, userName) {
             if (myRole !== 'ADMIN') return;
             if (!confirm(`[관리자 기능] "${userName} (${userEmail})" 회원을 즉시 VIP 등급으로 승인하시겠습니까?`)) return;
-
             try {
                 const { error } = await supabaseClient
                     .from('reasn_posts')
                     .insert([{ category: 'SYS_UPGRADE_ORDER', title: 'UPGRADE', content: userEmail, user_name: 'SYSTEM', user_role: 'ADMIN', user_email: 'system' }]);
-
-                if(error) alert('등업 오더 발급 실패: ' + error.message);
-                else alert('✅ 등업 승인 처리가 예약되었습니다. 해당 회원이 접속하는 즉시 즉시 VIP 권한이 영구 부여됩니다.');
+                if(error) alert('실패: ' + error.message);
+                else alert('✅ 등업 승인 처리가 예약되었습니다. 해당 회원이 접속하는 즉시 즉시 VIP 권한이 부여됩니다.');
             } catch(e) { alert('오류 발생'); }
         }
 
@@ -419,17 +410,13 @@
             if (!supabaseClient) return alert('네트워크 연결 확인이 필요합니다.');
             var titleText = document.getElementById('postTitle').value.trim();
             var contentText = document.getElementById('box').value.trim();
-            
             if (!titleText || !contentText) return alert('내용을 채워주세요!');
 
             if (editTargetPostId) {
                 try {
                     const { error } = await supabaseClient.from('reasn_posts').update({ title: titleText, content: contentText }).eq('id', editTargetPostId);
                     if (error) alert('수정 실패: ' + error.message);
-                    else {
-                        closeModal();
-                        displayPosts();
-                    }
+                    else { closeModal(); displayPosts(); }
                 } catch(e){ alert('수정 처리 오류'); }
             } else {
                 let displayAuthor = myName;
@@ -440,7 +427,6 @@
                     const { error } = await supabaseClient
                         .from('reasn_posts')
                         .insert([{ category: currentCategory, title: titleText, content: contentText, user_name: displayAuthor, user_role: myRole, user_email: myEmail }]);
-
                     if (error) return alert('글 등록 실패: ' + error.message);
 
                     if (currentCategory === '자유게시판' && myRole === 'USER') {
@@ -448,9 +434,7 @@
                         localStorage.setItem('reasn_user_points', myPoints);
                         try { await supabaseClient.auth.updateUser({ data: { points: myPoints } }); } catch(uErr) {}
                     }
-                    closeModal();
-                    updateUserUI();
-                    displayPosts(); 
+                    closeModal(); updateUserUI(); displayPosts(); 
                 } catch(e) { alert('통신 오류'); }
             }
         }
@@ -461,8 +445,7 @@
                 var filtered = fetchedPostsCache.filter(function(post) {
                     return (post.title || '').toLowerCase().includes(keyword) || (post.content || '').toLowerCase().includes(keyword);
                 });
-                currentPage = 1;
-                renderPagination(filtered);
+                currentPage = 1; renderPagination(filtered);
             } catch(e) { console.error(e); }
         }
 
@@ -473,15 +456,10 @@
 
             try {
                 let query = supabaseClient.from('reasn_posts').select('*').eq('category', currentCategory);
-                if (myRole !== 'ADMIN') {
-                    query = query.or('is_hidden.is.null,is_hidden.eq.false');
-                }
+                if (myRole !== 'ADMIN') query = query.or('is_hidden.is.null,is_hidden.eq.false');
 
                 const { data: posts, error } = await query.order('created_at', { ascending: true }).limit(200);
-                if (error) {
-                    board.innerHTML = '<p style="text-align:center; color:red; margin-top:20px;">로드 실패</p>';
-                    return;
-                }
+                if (error) { board.innerHTML = '<p style="text-align:center; color:red; margin-top:20px;">로드 실패</p>'; return; }
 
                 if(!posts || posts.length === 0) {
                     fetchedPostsCache = [];
@@ -495,10 +473,8 @@
                     posts[i].local_num = i + 1;
                     displayList.unshift(posts[i]); 
                 }
-                
                 fetchedPostsCache = displayList;
                 renderPagination(fetchedPostsCache);
-
             } catch (postError) { board.innerHTML = '<p style="text-align:center; color:red; margin-top:20px;">오류</p>'; }
         }
 
@@ -520,26 +496,19 @@
             if(totalPages <= 1) return;
 
             var prevBtn = document.createElement('button');
-            prevBtn.className = 'page-btn';
-            prevBtn.innerText = '이전';
-            prevBtn.disabled = currentPage === 1;
+            prevBtn.className = 'page-btn'; prevBtn.innerText = '이전'; prevBtn.disabled = currentPage === 1;
             prevBtn.onclick = function() { currentPage--; renderPagination(listData); };
             paginationBox.appendChild(prevBtn);
 
             for(var p=1; p<=totalPages; p++) {
                 var pBtn = document.createElement('button');
-                pBtn.className = 'page-btn' + (p === currentPage ? ' active' : '');
-                pBtn.innerText = p;
-                (function(pageIdx) {
-                    pBtn.onclick = function() { currentPage = pageIdx; renderPagination(listData); };
-                })(p);
+                pBtn.className = 'page-btn' + (p === currentPage ? ' active' : ''); pBtn.innerText = p;
+                (function(pageIdx) { pBtn.onclick = function() { currentPage = pageIdx; renderPagination(listData); }; })(p);
                 paginationBox.appendChild(pBtn);
             }
 
             var nextBtn = document.createElement('button');
-            nextBtn.className = 'page-btn';
-            nextBtn.innerText = '다음';
-            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.className = 'page-btn'; nextBtn.innerText = '다음'; nextBtn.disabled = currentPage === totalPages;
             nextBtn.onclick = function() { currentPage++; renderPagination(listData); };
             paginationBox.appendChild(nextBtn);
         }
@@ -561,10 +530,7 @@
 
                 var newPost = document.createElement('div');
                 newPost.className = 'post';
-
-                if (post.is_hidden === true) {
-                    newPost.style.backgroundColor = '#fff6e6';
-                }
+                if (post.is_hidden === true) newPost.style.backgroundColor = '#fff6e6';
 
                 var postHeader = document.createElement('div');
                 postHeader.className = 'post-header';
@@ -572,7 +538,6 @@
 
                 var titleLine = document.createElement('div');
                 titleLine.className = 'post-title-line';
-                
                 var tabularLabel = post.is_hidden === true ? '<span style="color:#ff9500; font-size:12px; font-weight:bold; margin-right:5px;">[숨김보관]</span>' : '';
                 titleLine.innerHTML = `
                     <span class="post-num">${post.local_num}</span> 
@@ -584,10 +549,7 @@
                 
                 let displayAuthorName = post.user_name || '회원';
                 let postRole = post.user_role || 'USER';
-
-                if (postRole !== 'ADMIN' && currentCategory === '익명게시판') {
-                    displayAuthorName = '익명';
-                }
+                if (postRole !== 'ADMIN' && currentCategory === '익명게시판') displayAuthorName = '익명';
 
                 var authorSpan = document.createElement('span');
                 authorSpan.className = 'clickable-author' + (myRole === 'ADMIN' && post.user_email && post.user_email !== 'unknown' && postRole === 'USER' ? ' can-upgrade' : '');
@@ -599,22 +561,18 @@
 
                 if (displayAuthorName !== '익명') {
                     var badge = document.createElement('span');
-                    badge.className = `author-badge badge-${postRole.toLowerCase()}`;
-                    badge.innerText = postRole;
+                    badge.className = `author-badge badge-${postRole.toLowerCase()}`; badge.innerText = postRole;
                     metaLine.appendChild(badge);
                 }
 
-                postHeader.appendChild(titleLine);
-                postHeader.appendChild(metaLine);
+                postHeader.appendChild(titleLine); postHeader.appendChild(metaLine);
                 newPost.appendChild(postHeader);
 
                 var postBody = document.createElement('div');
-                postBody.className = 'post-body';
-                postBody.id = `post-body-${post.id}`;
+                postBody.className = 'post-body'; postBody.id = `post-body-${post.id}`;
 
                 var contentTag = document.createElement('div');
-                contentTag.className = 'post-content';
-                contentTag.id = `post-text-${post.id}`;
+                contentTag.className = 'post-content'; contentTag.id = `post-text-${post.id}`;
                 contentTag.innerHTML = convertLinks(post.content);
                 postBody.appendChild(contentTag);
 
@@ -632,7 +590,6 @@
                         <button class="action-btn delete-btn" onclick="deletePost(event, ${post.id})">삭제</button>
                     `;
                 }
-                
                 if (myRole === 'ADMIN') {
                     var hideToggleText = post.is_hidden === true ? '숨김 해제' : '숨김';
                     btnGroup.innerHTML += `
@@ -640,14 +597,11 @@
                         <button class="action-btn move-btn" onclick="movePostCategory(event, ${post.id})">이동</button>
                     `;
                 }
-                
-                if (btnGroup.innerHTML !== '') {
-                    postBody.appendChild(btnGroup);
-                }
+                if (btnGroup.innerHTML !== '') postBody.appendChild(btnGroup);
 
+                // 댓글 영역
                 var commentSection = document.createElement('div');
                 commentSection.className = 'comment-section';
-
                 var commentList = document.createElement('div');
                 commentList.className = 'comment-list';
 
@@ -665,9 +619,7 @@
 
                     if (currentCategory === '익명게시판' && commentRole !== 'ADMIN') {
                         const commenterKey = comment.user_email || comment.user_name;
-                        if (!anonymousMap.has(commenterKey)) {
-                            anonymousMap.set(commenterKey, anonCounter++);
-                        }
+                        if (!anonymousMap.has(commenterKey)) anonymousMap.set(commenterKey, anonCounter++);
                         commentAuthorName = `익명${anonymousMap.get(commenterKey)}`;
                     } else {
                         if (commentAuthorName !== '익명') {
@@ -675,9 +627,20 @@
                         }
                     }
 
+                    // ↳ [댓글 수정 및 삭제 권한 할당] 본인 글이거나 관리자일 때 제어 도구 스팬 추가
+                    let actionHtml = '';
+                    if (myRole === 'ADMIN' || (comment.user_email && comment.user_email !== 'unknown' && comment.user_email === myEmail)) {
+                        actionHtml = `
+                            <span class="comment-actions-span">
+                                <a class="comment-action-link" onclick="editComment(${comment.id}, '${(comment.content || '').replace(/'/g, "\\'")}')">[수정]</a>
+                                <a class="comment-action-link comment-del-link" onclick="deleteComment(${comment.id})">[삭제]</a>
+                            </span>
+                        `;
+                    }
+
                     var replyTriggerHtml = !isSub ? `<span class="comment-reply-trigger" onclick="setupSubCommentInput(${post.id}, '${commentAuthorName}')">답글</span>` : "";
 
-                    commentItem.innerHTML = `${badgeHtml}<span class="comment-author">${commentAuthorName}</span><span>${comment.content || ''}</span>${replyTriggerHtml}`;
+                    commentItem.innerHTML = `${badgeHtml}<span class="comment-author">${commentAuthorName}</span><span>${comment.content || ''}</span>${actionHtml}${replyTriggerHtml}`;
                     commentList.appendChild(commentItem);
                 });
                 commentSection.appendChild(commentList);
@@ -694,6 +657,32 @@
                 newPost.appendChild(postBody);
                 board.appendChild(newPost);
             }
+        }
+
+        // 🛠️ [댓글 수정 인라인 프롬프트 함수]
+        async function editComment(commentId, currentContent) {
+            if(!supabaseClient) return;
+            var newText = prompt('수정할 댓글 내용을 입력해 주세요:', currentContent);
+            if (newText === null) return;
+            if (newText.trim() === '') return alert('댓글 내용을 입력하셔야 합니다!');
+            
+            try {
+                const { error } = await supabaseClient.from('reasn_comments').update({ content: newText.trim() }).eq('id', commentId);
+                if (error) alert('댓글 수정 실패: ' + error.message);
+                else displayPosts();
+            } catch(e) { alert('오류 발생'); }
+        }
+
+        // 🛠️ [댓글 원격 완전 소멸 함수]
+        async function deleteComment(commentId) {
+            if(!supabaseClient) return;
+            if(!confirm('정말 이 댓글을 삭제하시겠습니까? 데이터가 완전히 소멸됩니다.')) return;
+            
+            try {
+                const { error } = await supabaseClient.from('reasn_comments').delete().eq('id', commentId);
+                if (error) alert('댓글 삭제 실패: ' + error.message);
+                else displayPosts();
+            } catch(e) { alert('오류 발생'); }
         }
 
         async function toggleHidePost(event, postId, currentHiddenStatus) {
