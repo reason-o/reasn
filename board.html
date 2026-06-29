@@ -109,7 +109,7 @@
         .move-btn:hover { border-color: #007bff; color: #007bff; }
         .notice-btn:hover { border-color: #111; color: #fff; background-color: #111; }
 
-        /* 💬 댓글 및 대댓글 극도 정돈 */
+        /* 💬 댓글 및 대댓글 스타일 디자인 */
         .comment-section { background: #fafafa; padding: 15px; border-radius: 4px; }
         .comment-list { margin-bottom: 10px; }
         .comment-item { font-size: 13px; margin-bottom: 10px; line-height: 1.5; padding-bottom: 8px; border-bottom: 1px solid #f3f3f3; position: relative; }
@@ -277,9 +277,9 @@
         var fetchedPostsCache = []; 
         var editTargetPostId = null; 
         var currentOpenedPostId = null; 
-        var loadedPostImageUrl = null; // 수정 시 이미지 주소 임시 저장용
+        var loadedPostImageUrl = null; 
 
-        // 대댓글 제어용 런타임 타겟 트래킹 변수
+        // 대댓글 제어용 런타임 변수
         var currentSelectedCommentAuthor = null; 
 
         var currentPage = 1;
@@ -557,8 +557,9 @@
             switchToListView();
         }
 
+        // ✨ [보강 완료된 핵심 저장 함수]
         async function savePost() {
-            if (!supabaseClient || myRole === 'GUEST') return alert('로그인 후 이용 가능합니다.');
+            if (!supabaseClient) return alert('네트워크 연결 확인이 필요합니다.');
             var titleText = document.getElementById('postTitle').value.trim();
             var contentText = document.getElementById('box').value.trim();
             
@@ -567,61 +568,65 @@
 
             if (!titleText || !contentText) return alert('내용을 채워주세요!');
 
-            // 📦 [초효율 이미지 업로드 로직] 파일이 선택되었다면 스토리지로 비동기 선행 업로드 처리
-            var fileInput = document.getElementById('postImageFile');
-            let finalImageUrl = loadedPostImageUrl || null; 
+            var submitBtn = document.getElementById('writeSubmitBtn');
+            var originalBtnText = submitBtn.innerText;
 
-            if(fileInput && fileInput.files.length > 0) {
-                var file = fileInput.files[0];
-                var fileExt = file.name.split('.').pop();
-                // 파일 중복 방지를 위한 랜덤 타임스탬프 고유 파일명 생성
-                var fileName = `${Date.now()}_${Math.floor(Math.random() * 1000)}.${fileExt}`;
+            try {
+                var fileInput = document.getElementById('postImageFile');
+                let finalImageUrl = loadedPostImageUrl || null; 
 
-                document.getElementById('writeSubmitBtn').innerText = "이미지 업로드 중...";
-                document.getElementById('writeSubmitBtn').disabled = true;
+                if(fileInput && fileInput.files.length > 0) {
+                    var file = fileInput.files[0];
+                    var fileExt = file.name.split('.').pop();
+                    var fileName = `${Date.now()}_${Math.floor(Math.random() * 1000)}.${fileExt}`;
 
-                const { data: uploadData, error: uploadError } = await supabaseClient.storage
-                    .from('reasn_images')
-                    .upload(fileName, file);
+                    submitBtn.innerText = "이미지 업로드 중...";
+                    submitBtn.disabled = true;
 
-                if(uploadError) {
-                    alert("이미지 처리 실패: " + uploadError.message);
-                    document.getElementById('writeSubmitBtn').innerText = "확인";
-                    document.getElementById('writeSubmitBtn').disabled = false;
-                    return;
+                    const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                        .from('reasn_images')
+                        .upload(fileName, file);
+
+                    if(uploadError) {
+                        alert("이미지 처리 실패: " + uploadError.message);
+                        submitBtn.innerText = originalBtnText;
+                        submitBtn.disabled = false;
+                        return;
+                    }
+                    
+                    finalImageUrl = `${supabaseClient.storage.from('reasn_images').getPublicUrl(fileName).data.publicUrl}`;
                 }
-                
-                // 퍼블릭 버킷의 파일 다운로드 외부 URL 추출 생성 (DB엔 이 주소 텍스트만 저장!)
-                finalImageUrl = `${supabaseClient.storage.from('reasn_images').getPublicUrl(fileName).data.publicUrl}`;
-            }
 
-            if (editTargetPostId) {
-                try {
+                submitBtn.innerText = "이야기 등록 중...";
+                submitBtn.disabled = true;
+
+                if (editTargetPostId) {
                     const { error } = await supabaseClient
                         .from('reasn_posts')
                         .update({ title: titleText, content: contentText, is_notice: isNoticeChecked, image_url: finalImageUrl })
                         .eq('id', editTargetPostId);
                         
-                    if (error) alert('수정 실패: ' + error.message);
-                    else { 
-                        let query = supabaseClient.from('reasn_posts').select('*').eq('category', currentCategory);
-                        if (myRole !== 'ADMIN') query = query.or('is_hidden.is.null,is_hidden.eq.false');
-                        const { data: posts } = await query.order('created_at', { ascending: true }).limit(200);
-                        if(posts) {
-                            let displayList = [];
-                            for (var i = 0; i < posts.length; i++) { posts[i].local_num = i + 1; displayList.unshift(posts[i]); }
-                            displayList.sort((a,b) => (b.is_notice===true?1:0) - (a.is_notice===true?1:0));
-                            fetchedPostsCache = displayList;
-                        }
+                    if (error) {
+                        alert('수정 실패: ' + error.message);
+                    } else { 
+                        try {
+                            let query = supabaseClient.from('reasn_posts').select('*').eq('category', currentCategory);
+                            if (myRole !== 'ADMIN') query = query.or('is_hidden.is.null,is_hidden.eq.false');
+                            const { data: posts } = await query.order('created_at', { ascending: true }).limit(200);
+                            if(posts) {
+                                let displayList = [];
+                                for (var i = 0; i < posts.length; i++) { posts[i].local_num = i + 1; displayList.unshift(posts[i]); }
+                                displayList.sort((a,b) => (b.is_notice===true?1:0) - (a.is_notice===true?1:0));
+                                fetchedPostsCache = displayList;
+                            }
+                        } catch(cErr){}
                         loadPostDetailView(editTargetPostId); 
                     }
-                } catch(e){ alert('수정 처리 오류'); }
-            } else {
-                let displayAuthor = myName;
-                if (myRole === 'ADMIN') displayAuthor = '관리자';
-                else if (writeTargetCategory === '익명게시판') displayAuthor = '익명'; 
+                } else {
+                    let displayAuthor = myName;
+                    if (myRole === 'ADMIN') displayAuthor = '관리자';
+                    else if (writeTargetCategory === '익명게시판') displayAuthor = '익명'; 
 
-                try {
                     const { error } = await supabaseClient
                         .from('reasn_posts')
                         .insert([{ 
@@ -632,20 +637,29 @@
                             user_role: myRole, 
                             user_email: myEmail,
                             is_notice: isNoticeChecked,
-                            image_url: finalImageUrl // 대용량 파일 대신 주소 한 줄만 가볍게 주입!
+                            image_url: finalImageUrl 
                         }]);
                         
-                    if (error) return alert('글 등록 실패: ' + error.message);
-
-                    if (writeTargetCategory === '자유게시판' && myRole === 'USER') {
-                        myPoints += 10; 
-                        localStorage.setItem('reasn_user_points', myPoints);
-                        try { await supabaseClient.auth.updateUser({ data: { points: myPoints } }); } catch(uErr) {}
+                    if (error) {
+                        alert('글 등록 실패: ' + error.message);
+                    } else {
+                        if (writeTargetCategory === '자유게시판' && myRole === 'USER') {
+                            myPoints += 10; 
+                            localStorage.setItem('reasn_user_points', myPoints);
+                            try { await supabaseClient.auth.updateUser({ data: { points: myPoints } }); } catch(uErr) {}
+                        }
+                        currentCategory = writeTargetCategory;
+                        changeCategory(currentCategory);
                     }
-                    
-                    currentCategory = writeTargetCategory;
-                    changeCategory(currentCategory);
-                } catch(e) { alert('통신 오류'); }
+                }
+            } catch(e) {
+                alert('처리 중 알 수 없는 런타임 오류가 발생했습니다.');
+            } finally {
+                // 🛡️ 무한 로딩 방벽: 에러 유무 상관없이 최종 버튼 복구 보장
+                if(submitBtn) {
+                    submitBtn.innerText = "확인";
+                    submitBtn.disabled = false;
+                }
             }
         }
 
@@ -761,7 +775,7 @@
                 var numberOrNoticeLabel = post.is_notice === true ? '<i class="notice-label">📌 공지</i>' : `<span class="post-num">${post.local_num}</span>`;
                 var tabularLabel = post.is_hidden === true ? '<span style="color:#ff9500; font-size:12px; font-weight:bold; margin-right:5px;">[숨김보관]</span>' : '';
                 
-                // 🖼️ 리스트 뷰 제목 옆에 이미지 첨부 아이콘(📸) 자동 마킹 분기 설계
+                // 📸 이미지 첨부 여부에 따른 리스트 아이콘 표기 분기
                 var hasImgIcon = post.image_url ? ' <span style="font-size:11px; color:#aaa;">📸</span>' : '';
 
                 titleLine.innerHTML = `
@@ -800,7 +814,7 @@
                 return;
             }
             if (currentCategory === '익명게시판' && myRole !== 'VIP' && myRole !== 'ADMIN') {
-                alert('🔒 익명게시판의 글 내용과 댓글은 VIP 등급만 열람할 수 있습니다. 자유게시판에서 포인트를 쌓아 등업해 주세요!');
+                alert('🔒 익명게시판의 글 내용과 댓글은 VIP 등급만 열람할 수 있습니다.');
                 return; 
             }
             loadPostDetailView(postId);
@@ -808,7 +822,7 @@
 
         async function loadPostDetailView(postId) {
             currentOpenedPostId = postId;
-            currentSelectedCommentAuthor = null; // 🧹 글 바꿀 때 대댓글 상태값도 깨끗하게 리셋
+            currentSelectedCommentAuthor = null; 
             
             var oldSubArea = document.getElementById('dtSubListContainerArea');
             if(oldSubArea) oldSubArea.remove();
@@ -823,7 +837,7 @@
             document.getElementById('detPostTitle').innerText = '불러오는 중...';
             document.getElementById('detPostMeta').innerHTML = '';
             document.getElementById('detPostContent').innerText = '';
-            document.getElementById('detailImageArea').innerHTML = ''; // 이미지 구역 청소
+            document.getElementById('detailImageArea').innerHTML = ''; 
             document.getElementById('detailActionButtons').innerHTML = '';
             document.getElementById('detailCommentList').innerHTML = '댓글 로딩 중...';
             
@@ -860,7 +874,7 @@
 
                 document.getElementById('detPostContent').innerHTML = convertLinks(post.content);
 
-                // 🖼️ 이미지 주소가 있다면 상세보기 본문 아래에 고화질 정밀 출력
+                // 🖼️ 이미지 출력 렌더러
                 if(post.image_url) {
                     loadedPostImageUrl = post.image_url;
                     document.getElementById('detailImageArea').innerHTML = `<img src="${post.image_url}" class="uploaded-image-preview" alt="첨부 이미지">`;
@@ -973,7 +987,6 @@
                 comments.forEach(comment => {
                     var commentItem = document.createElement('div');
                     
-                    // ↳ 패턴 유무를 체크하여 대댓글 클래스를 유동 연동합니다.
                     var isSub = comment.content && comment.content.startsWith('↳ ');
                     commentItem.className = 'comment-item' + (isSub ? ' sub-comment' : '');
                     
@@ -986,7 +999,7 @@
                         commentAuthorName = `익명${anonymousMap.get(commenterKey)}`;
                     } 
 
-                    // 👑 [요청사항 반영]: 유저 등급 뱃지 전면 삭제 연동 (관리자만 뱃지 붙임)
+                    // 👑 유저 등급 뱃지 제거 연동 완료 (오직 관리자 뱃지만 노출)
                     let badgeHtml = '';
                     if (commentAuthorName === '관리자' || commentRole === 'ADMIN') {
                         badgeHtml = `<span class="comment-badge" style="color:#ff3b30; font-weight:bold; background:#ffebe6;">관리자</span>`;
@@ -1002,7 +1015,7 @@
                         `;
                     }
 
-                    // 💬 [대댓글 탑재]: 답글 터치 시 인풋 박스로 정보 바인딩 연동
+                    // 💬 대댓글 트리거 링크 바인딩
                     var replyTriggerHtml = `<span class="comment-reply-trigger" onclick="setupSubCommentInput('${commentAuthorName}')">[답글]</span>`;
 
                     commentItem.innerHTML = `${badgeHtml}<span class="comment-author">${commentAuthorName}</span><span>${comment.content || ''}</span>${actionHtml}${replyTriggerHtml}`;
@@ -1125,7 +1138,7 @@
             } catch(e) {}
         }
 
-        // 💬 [대댓글 바인딩 함수] 답글 단추 누를 시 폼 디자인 타겟 연동
+        // 💬 대댓글 모드 UI 상태 관리 전환 함수
         function setupSubCommentInput(targetAuthor) {
             if(myRole === 'GUEST') return;
             currentSelectedCommentAuthor = targetAuthor;
@@ -1163,7 +1176,7 @@
             if (myRole === 'ADMIN') displayAuthor = '관리자';
             else if (currentCategory === '익명게시판') displayAuthor = '익명';
 
-            // 대댓글 모드가 활성화되어 있다면 문두에 화살표 접두사 규칙 자동 가미
+            // 대댓글 조건 충족 시 접두사 추가
             if(currentSelectedCommentAuthor) {
                 text = `↳ @${currentSelectedCommentAuthor} ${text}`;
             }
@@ -1177,7 +1190,7 @@
                 else {
                     if(input) input.value = '';
                     
-                    // 대댓글 상태 상태 초기화 청소
+                    // 대댓글 모드 초기화
                     currentSelectedCommentAuthor = null;
                     var ind = document.getElementById('replyModeIndicator');
                     if(ind) ind.style.display = 'none';
