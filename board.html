@@ -13,7 +13,6 @@
         header { background-color: #ffffff; color: #111; padding: 20px; text-align: center; font-weight: bold; font-size: 22px; position: relative; letter-spacing: 1px; border-bottom: 1px solid #111; z-index: 10; }
         .logo-link { color: #111; text-decoration: none; cursor: pointer; }
 
-        /* 👤 우측 상단 내 정보 펼침 카드 */
         .user-info-wrapper { position: absolute; right: 20px; top: 18px; z-index: 11; display: flex; flex-direction: column; align-items: flex-end; }
         .my-profile-trigger { font-size: 13px; font-weight: 600; color: #111; cursor: pointer; background: #f5f5f5; padding: 4px 10px; border-radius: 20px; border: 1px solid #eee; transition: all 0.2s; }
         .my-profile-trigger:hover { background: #111; color: #fff; border-color: #111; }
@@ -32,7 +31,6 @@
 
         .container { display: flex; flex: 1; max-width: 700px; width: 100%; margin: 0 auto; padding: 15px 15px; flex-direction: column; position: relative; z-index: 1; }
         
-        /* 📱 모바일 카테고리 탭 */
         .board-controls { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; margin-bottom: 10px; gap: 10px; }
         .category-tabs { display: flex; flex: 1; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
         .category-tabs::-webkit-scrollbar { display: none; }
@@ -44,27 +42,31 @@
         .open-write-btn { padding: 8px 14px; background-color: #111; color: #fff; border: none; font-size: 13px; font-weight: bold; cursor: pointer; letter-spacing: 0.5px; flex-shrink: 0; border-radius: 4px; }
         .open-write-btn:hover { background-color: #333; }
 
-        /* 📋 각 섹션 제어 클래스 */
         .view-section { display: none; }
         .listViewSection { display: block; } 
         .writeViewSection { flex-direction: column; gap: 15px; padding: 10px 4px; }
         
-        /* 👁️ 독립된 글 상세보기 뷰 섹션 */
         .detailViewSection { flex-direction: column; padding: 15px 4px; }
         .detail-title { font-size: 20px; font-weight: bold; color: #111; line-height: 1.4; margin-bottom: 10px; word-break: break-all; }
         .detail-meta { font-size: 13px; color: #666; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 20px; }
         .detail-content { font-size: 15px; line-height: 1.7; color: #222; white-space: pre-wrap; word-break: break-all; min-height: 120px; margin-bottom: 25px; }
         .detail-content a { color: #007bff; text-decoration: underline; }
 
-        /* 📑 상세보기 하단 서브 리스트 컨테이너 스타일 */
+        /* 🖼️ 업로드된 이미지 렌더링 스타일 */
+        .uploaded-image-preview { max-width: 100%; max-height: 350px; border-radius: 6px; margin-top: 15px; display: block; object-fit: contain; background: #fafafa; border: 1px solid #eee; }
+
+        /* 📁 파일 선택 및 이미지 업로드 UI 스타일 */
+        .file-upload-wrapper { display: flex; flex-direction: column; gap: 6px; background: #f9f9f9; padding: 12px; border: 1px dashed #ddd; border-radius: 6px; font-size: 12px; color: #666; }
+        .file-input-btn { font-size: 12px; font-weight: bold; cursor: pointer; color: #111; background: #fff; border: 1px solid #ccc; padding: 6px 12px; border-radius: 4px; display: inline-block; width: max-content; }
+        .file-input-btn:hover { background: #f5f5f5; }
+
         .detail-sub-list-wrapper { margin-top: 40px; border-top: 2px solid #111; padding-top: 20px; width: 100%; }
         .sub-list-title { font-size: 14px; font-weight: bold; color: #555; margin-bottom: 12px; letter-spacing: 0.5px; }
 
-        /* ✍️ 글 작성 뷰 관련 스타일 */
         .write-view-title { font-size: 18px; font-weight: bold; color: #111; border-bottom: 2px solid #111; padding-bottom: 8px; margin-bottom: 5px; }
         .title-input { width: 100%; padding: 12px; border: 1px solid #ddd; font-size: 14px; font-weight: bold; border-radius: 4px; background: #fff; }
         .title-input:focus { outline: none; border-color: #111; }
-        .content-textarea { width: 100%; height: 250px; padding: 12px; border: 1px solid #ddd; resize: none; font-size: 14px; border-radius: 4px; line-height: 1.6; background: #fff; }
+        .content-textarea { width: 100%; height: 220px; padding: 12px; border: 1px solid #ddd; resize: none; font-size: 14px; border-radius: 4px; line-height: 1.6; background: #fff; }
         .content-textarea:focus { outline: none; border-color: #111; }
         
         .notice-check-wrapper { display: none; align-items: center; gap: 6px; font-size: 13px; font-weight: bold; color: #111; margin-top: 2px; }
@@ -76,13 +78,11 @@
         .cancel-btn { background-color: #fff; color: #555; border: 1px solid #ddd; }
         .cancel-btn:hover { background-color: #f5f5f5; color: #111; border-color: #111; }
 
-        /* 🔍 검색 바 */
         .search-wrapper { display: flex; gap: 8px; margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 12px; }
         .search-input { flex: 1; padding: 9px 12px; border: 1px solid #eee; font-size: 13px; background-color: #fafafa; border-radius: 4px; }
         .search-input:focus { outline: none; border-color: #111; background-color: #fff; }
         .search-btn { padding: 9px 16px; background-color: #111; color: #fff; border: none; font-size: 12px; font-weight: bold; cursor: pointer; border-radius: 4px; }
 
-        /* 📝 줄노트 감성 게시글 목록 리스트 */
         .post-list-wrapper { display: flex; flex-direction: column; }
         .post { background: #fff; padding: 16px 4px; border-bottom: 1px solid #f0f0f0; transition: background 0.1s; cursor: pointer; }
         .post:hover { background-color: #fafafa; }
@@ -109,35 +109,36 @@
         .move-btn:hover { border-color: #007bff; color: #007bff; }
         .notice-btn:hover { border-color: #111; color: #fff; background-color: #111; }
 
-        /* 댓글 및 대댓글 영역 */
+        /* 💬 댓글 및 대댓글 극도 정돈 */
         .comment-section { background: #fafafa; padding: 15px; border-radius: 4px; }
         .comment-list { margin-bottom: 10px; }
         .comment-item { font-size: 13px; margin-bottom: 10px; line-height: 1.5; padding-bottom: 8px; border-bottom: 1px solid #f3f3f3; position: relative; }
         .comment-item:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
-        .comment-item.sub-comment { margin-left: 20px; border-left: 2px solid #ddd; padding-left: 10px; background-color: #f7f7f7; margin-top: 5px; }
+        
+        /* ↳ 대댓글 디자인 고도화 */
+        .comment-item.sub-comment { margin-left: 20px; border-left: 2px solid #ddd; padding-left: 10px; background-color: #f3f3f3; margin-top: 6px; padding-top: 4px; }
         
         .comment-author { font-weight: bold; color: #222; margin-right: 6px; }
-        .comment-badge { font-size: 9px; padding: 1px 3px; margin-right: 5px; background: #eee; border-radius: 2px; }
-        
         .comment-actions-span { font-size: 11px; color: #888; margin-left: 8px; }
         .comment-action-link { cursor: pointer; color: #777; text-decoration: none; margin-left: 5px; }
         .comment-action-link:hover { color: #111; text-decoration: underline; }
         .comment-del-link:hover { color: #ff3b30 !important; }
         
-        .comment-reply-trigger { font-size: 11px; color: #007bff; cursor: pointer; margin-left: 10px; text-decoration: underline; }
-        
-        .comment-input-box { display: flex; gap: 8px; margin-top: 10px; }
+        .comment-reply-trigger { font-size: 11px; color: #007bff; cursor: pointer; margin-left: 10px; text-decoration: underline; font-weight: bold; }
+
+        .comment-input-box { display: flex; flex-direction: column; gap: 6px; margin-top: 15px; background: #fff; padding: 10px; border: 1px solid #eee; border-radius: 4px; }
+        .comment-input-row { display: flex; gap: 8px; }
         .comment-input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; font-size: 13px; border-radius: 4px; }
         .comment-input:focus { outline: none; border-color: #111; }
         .comment-btn { padding: 8px 14px; background: #111; color: #fff; border: none; font-size: 12px; font-weight: bold; cursor: pointer; border-radius: 4px; }
+        
+        .active-reply-badge { display: none; font-size: 11px; font-weight: bold; color: #007bff; background: #e6f0ff; padding: 2px 8px; border-radius: 2px; width: max-content; }
 
-        /* 🔢 페이지네이션 */
         .pagination { display: flex; justify-content: center; align-items: center; gap: 5px; margin: 25px 0 15px 0; }
         .page-btn { background: #fff; border: 1px solid #ddd; color: #333; padding: 5px 10px; font-size: 12px; cursor: pointer; border-radius: 3px; }
         .page-btn:hover, .page-btn.active { background: #111; color: #fff; border-color: #111; }
         .page-btn:disabled { background: #fff; border-color: #eee; color: #ccc; cursor: not-allowed; }
 
-        /* 🔲 비밀번호 변경 모달 팝업 */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 2000; }
         .modal-content { background: #fff; padding: 25px; width: 92%; max-width: 400px; border-radius: 6px; display: flex; flex-direction: column; gap: 12px; position: relative; border: 1px solid #111; }
         .modal-title { font-size: 18px; font-weight: bold; }
@@ -205,6 +206,14 @@
             <input type="text" id="postTitle" class="title-input" placeholder="제목을 입력하세요">
             <textarea id="box" class="content-textarea" placeholder="생각이나 이야기를 채워주세요..."></textarea>
             
+            <div class="file-upload-wrapper">
+                <span id="uploadStatusText">🖼️ 이미지 첨부 (선택사항, 서버 부담 없는 CDN 방식)</span>
+                <label class="file-input-btn">
+                    파일 선택 <input type="file" id="postImageFile" accept="image/*" style="display:none;" onchange="handleFileSelectLabel()">
+                </label>
+                <span id="selectedFileName" style="color:#aaa; font-style:italic;">선택된 파일 없음</span>
+            </div>
+
             <div class="notice-check-wrapper" id="adminNoticeCheckLine">
                 <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer;">
                     <input type="checkbox" id="postIsNotice"> 📌 이 게시글을 상단 고정 공지사항으로 등록
@@ -220,15 +229,21 @@
         <div id="detailModeSection" class="detailViewSection view-section">
             <div class="detail-title" id="detPostTitle">제목 로딩 중...</div>
             <div class="detail-meta" id="detPostMeta">작성자 정보 로딩 중...</div>
+            
             <div class="detail-content" id="detPostContent">내용 로딩 중...</div>
+            <div id="detailImageArea"></div> 
             
             <div id="detailActionButtons" class="action-buttons"></div>
             
             <div class="comment-section" style="border-top: 1px solid #111; margin-top:20px;">
                 <div id="detailCommentList" class="comment-list"></div>
+                
                 <div class="comment-input-box">
-                    <input type="text" class="comment-input" id="detailReplyInput" placeholder="댓글을 입력하세요...">
-                    <button class="comment-btn" id="detailCommentSubmitBtn">등록</button>
+                    <div class="active-reply-badge" id="replyModeIndicator">↳ 대댓글 작성 중</div>
+                    <div class="comment-input-row">
+                        <input type="text" class="comment-input" id="detailReplyInput" placeholder="댓글을 입력하세요...">
+                        <button class="comment-btn" id="detailCommentSubmitBtn">등록</button>
+                    </div>
                 </div>
             </div>
 
@@ -262,6 +277,10 @@
         var fetchedPostsCache = []; 
         var editTargetPostId = null; 
         var currentOpenedPostId = null; 
+        var loadedPostImageUrl = null; // 수정 시 이미지 주소 임시 저장용
+
+        // 대댓글 제어용 런타임 타겟 트래킹 변수
+        var currentSelectedCommentAuthor = null; 
 
         var currentPage = 1;
         var postsPerPage = 10;
@@ -373,6 +392,18 @@
             } catch(e) {}
         }
 
+        function handleFileSelectLabel() {
+            var fileInput = document.getElementById('postImageFile');
+            var labelSpan = document.getElementById('selectedFileName');
+            if(fileInput && fileInput.files.length > 0) {
+                labelSpan.innerText = fileInput.files[0].name + " (확인 버튼을 누르면 업로드됩니다.)";
+                labelSpan.style.color = "#007bff";
+            } else {
+                labelSpan.innerText = "선택된 파일 없음";
+                labelSpan.style.color = "#aaa";
+            }
+        }
+
         async function changeNicknamePrompt() {
             if(!supabaseClient || myRole === 'GUEST') return;
             var newNick = prompt('변경할 새로운 닉네임을 입력하세요 (최대 10자):', myName);
@@ -404,10 +435,17 @@
             }
             editTargetPostId = null;
             writeTargetCategory = currentCategory; 
+            loadedPostImageUrl = null;
             
             document.getElementById('writeFormTitle').innerText = writeTargetCategory + ' 글 작성하기';
             document.getElementById('postTitle').value = '';
             document.getElementById('box').value = '';
+            
+            var fileInput = document.getElementById('postImageFile');
+            if(fileInput) fileInput.value = '';
+            var labelSpan = document.getElementById('selectedFileName');
+            if(labelSpan) { labelSpan.innerText = "선택된 파일 없음"; labelSpan.style.color = "#aaa"; }
+
             var ck = document.getElementById('postIsNotice');
             if(ck) ck.checked = false;
 
@@ -529,11 +567,39 @@
 
             if (!titleText || !contentText) return alert('내용을 채워주세요!');
 
+            // 📦 [초효율 이미지 업로드 로직] 파일이 선택되었다면 스토리지로 비동기 선행 업로드 처리
+            var fileInput = document.getElementById('postImageFile');
+            let finalImageUrl = loadedPostImageUrl || null; 
+
+            if(fileInput && fileInput.files.length > 0) {
+                var file = fileInput.files[0];
+                var fileExt = file.name.split('.').pop();
+                // 파일 중복 방지를 위한 랜덤 타임스탬프 고유 파일명 생성
+                var fileName = `${Date.now()}_${Math.floor(Math.random() * 1000)}.${fileExt}`;
+
+                document.getElementById('writeSubmitBtn').innerText = "이미지 업로드 중...";
+                document.getElementById('writeSubmitBtn').disabled = true;
+
+                const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                    .from('reasn_images')
+                    .upload(fileName, file);
+
+                if(uploadError) {
+                    alert("이미지 처리 실패: " + uploadError.message);
+                    document.getElementById('writeSubmitBtn').innerText = "확인";
+                    document.getElementById('writeSubmitBtn').disabled = false;
+                    return;
+                }
+                
+                // 퍼블릭 버킷의 파일 다운로드 외부 URL 추출 생성 (DB엔 이 주소 텍스트만 저장!)
+                finalImageUrl = `${supabaseClient.storage.from('reasn_images').getPublicUrl(fileName).data.publicUrl}`;
+            }
+
             if (editTargetPostId) {
                 try {
                     const { error } = await supabaseClient
                         .from('reasn_posts')
-                        .update({ title: titleText, content: contentText, is_notice: isNoticeChecked })
+                        .update({ title: titleText, content: contentText, is_notice: isNoticeChecked, image_url: finalImageUrl })
                         .eq('id', editTargetPostId);
                         
                     if (error) alert('수정 실패: ' + error.message);
@@ -565,7 +631,8 @@
                             user_name: displayAuthor, 
                             user_role: myRole, 
                             user_email: myEmail,
-                            is_notice: isNoticeChecked 
+                            is_notice: isNoticeChecked,
+                            image_url: finalImageUrl // 대용량 파일 대신 주소 한 줄만 가볍게 주입!
                         }]);
                         
                     if (error) return alert('글 등록 실패: ' + error.message);
@@ -694,9 +761,12 @@
                 var numberOrNoticeLabel = post.is_notice === true ? '<i class="notice-label">📌 공지</i>' : `<span class="post-num">${post.local_num}</span>`;
                 var tabularLabel = post.is_hidden === true ? '<span style="color:#ff9500; font-size:12px; font-weight:bold; margin-right:5px;">[숨김보관]</span>' : '';
                 
+                // 🖼️ 리스트 뷰 제목 옆에 이미지 첨부 아이콘(📸) 자동 마킹 분기 설계
+                var hasImgIcon = post.image_url ? ' <span style="font-size:11px; color:#aaa;">📸</span>' : '';
+
                 titleLine.innerHTML = `
                     ${numberOrNoticeLabel}
-                    <span style="${post.is_notice === true ? 'font-weight:bold;' : ''}">${tabularLabel}${post.title || '제목 없음'}<span class="comment-count-badge">(${commentCount})</span></span>
+                    <span style="${post.is_notice === true ? 'font-weight:bold;' : ''}">${tabularLabel}${post.title || '제목 없음'}${hasImgIcon}<span class="comment-count-badge">(${commentCount})</span></span>
                 `;
                 
                 var metaLine = document.createElement('div');
@@ -711,7 +781,6 @@
                 authorSpan.innerText = displayAuthorName;
                 metaLine.appendChild(authorSpan);
 
-                // 👑 일반 회원 뱃지 제거, [관리자]일 때만 뱃지 노출 사양 적용
                 if (postRole === 'ADMIN') {
                     var badge = document.createElement('span');
                     badge.className = `author-badge badge-admin`; badge.innerText = '관리자';
@@ -739,6 +808,7 @@
 
         async function loadPostDetailView(postId) {
             currentOpenedPostId = postId;
+            currentSelectedCommentAuthor = null; // 🧹 글 바꿀 때 대댓글 상태값도 깨끗하게 리셋
             
             var oldSubArea = document.getElementById('dtSubListContainerArea');
             if(oldSubArea) oldSubArea.remove();
@@ -753,8 +823,14 @@
             document.getElementById('detPostTitle').innerText = '불러오는 중...';
             document.getElementById('detPostMeta').innerHTML = '';
             document.getElementById('detPostContent').innerText = '';
+            document.getElementById('detailImageArea').innerHTML = ''; // 이미지 구역 청소
             document.getElementById('detailActionButtons').innerHTML = '';
             document.getElementById('detailCommentList').innerHTML = '댓글 로딩 중...';
+            
+            var ind = document.getElementById('replyModeIndicator');
+            if(ind) ind.style.display = 'none';
+            var inp = document.getElementById('detailReplyInput');
+            if(inp) { inp.value = ''; inp.placeholder = "댓글을 입력하세요..."; }
 
             try {
                 const { data: post, error } = await supabaseClient.from('reasn_posts').select('*').eq('id', postId).single();
@@ -770,7 +846,6 @@
                 let postRole = post.user_role || 'USER';
                 if (postRole !== 'ADMIN' && currentCategory === '익명게시판') displayAuthorName = '익명';
 
-                // 👑 상세보기 내부 메타라인도 일반 등급 뱃지 제거 및 관리자용 세팅 동기화
                 let badgeHtml = postRole === 'ADMIN' ? `<span class="author-badge badge-admin">관리자</span>` : '';
                 let timeStr = post.created_at ? new Date(post.created_at).toLocaleString('ko-KR') : '';
                 
@@ -784,6 +859,14 @@
                 `;
 
                 document.getElementById('detPostContent').innerHTML = convertLinks(post.content);
+
+                // 🖼️ 이미지 주소가 있다면 상세보기 본문 아래에 고화질 정밀 출력
+                if(post.image_url) {
+                    loadedPostImageUrl = post.image_url;
+                    document.getElementById('detailImageArea').innerHTML = `<img src="${post.image_url}" class="uploaded-image-preview" alt="첨부 이미지">`;
+                } else {
+                    loadedPostImageUrl = null;
+                }
 
                 var btnGroup = document.getElementById('detailActionButtons');
                 btnGroup.innerHTML = '';
@@ -851,12 +934,13 @@
 
                     var subNoticeLabel = post.is_notice === true ? '<span style="font-weight:bold; color:#111; margin-right:8px;">[공지]</span>' : `<span class="post-num">${post.local_num}</span>`;
                     var activeCheckArrow = post.id === currentOpenedPostId ? ' <span style="font-size:11px; color:#aaa; font-weight:normal; margin-left:5px;">(지금 읽는 중)</span>' : '';
+                    var hasImgIcon = post.image_url ? ' <span style="font-size:11px; color:#aaa;">📸</span>' : '';
 
                     subPostRow.innerHTML = `
                         <div class="post-header">
                             <div class="post-title-line" style="font-size:14px;">
                                 ${subNoticeLabel}
-                                <span style="${post.id === currentOpenedPostId ? 'font-weight:bold; color:#111;' : 'font-weight:500; color:#444;'}">${post.title || '제목 없음'}<span class="comment-count-badge">(${commentCount})</span>${activeCheckArrow}</span>
+                                <span style="${post.id === currentOpenedPostId ? 'font-weight:bold; color:#111;' : 'font-weight:500; color:#444;'}">${post.title || '제목 없음'}${hasImgIcon}<span class="comment-count-badge">(${commentCount})</span>${activeCheckArrow}</span>
                             </div>
                             <div class="post-meta-line" style="font-size:11px; color:#aaa;">
                                 <span>${post.user_name === '관리자' ? '관리자' : (currentCategory === '익명게시판' ? '익명' : post.user_name)}</span>
@@ -888,21 +972,24 @@
 
                 comments.forEach(comment => {
                     var commentItem = document.createElement('div');
+                    
+                    // ↳ 패턴 유무를 체크하여 대댓글 클래스를 유동 연동합니다.
                     var isSub = comment.content && comment.content.startsWith('↳ ');
                     commentItem.className = 'comment-item' + (isSub ? ' sub-comment' : '');
                     
                     let commentAuthorName = comment.user_name || '익명';
                     let commentRole = comment.user_role || 'USER';
-                    let badgeHtml = '';
 
                     if (currentCategory === '익명게시판' && commentRole !== 'ADMIN') {
                         const commenterKey = comment.user_email || comment.user_name;
                         if (!anonymousMap.has(commenterKey)) anonymousMap.set(commenterKey, anonCounter++);
                         commentAuthorName = `익명${anonymousMap.get(commenterKey)}`;
-                    } else {
-                        if (commentAuthorName !== '익명') {
-                            badgeHtml = `<span class="comment-badge" style="color:${commentRole==='ADMIN'?'#ff3b30':'#007bff'}">${commentRole}</span>`;
-                        }
+                    } 
+
+                    // 👑 [요청사항 반영]: 유저 등급 뱃지 전면 삭제 연동 (관리자만 뱃지 붙임)
+                    let badgeHtml = '';
+                    if (commentAuthorName === '관리자' || commentRole === 'ADMIN') {
+                        badgeHtml = `<span class="comment-badge" style="color:#ff3b30; font-weight:bold; background:#ffebe6;">관리자</span>`;
                     }
 
                     let actionHtml = '';
@@ -915,7 +1002,8 @@
                         `;
                     }
 
-                    var replyTriggerHtml = !isSub ? `<span class="comment-reply-trigger" onclick="setupSubCommentInput('${commentAuthorName}')">답글</span>` : "";
+                    // 💬 [대댓글 탑재]: 답글 터치 시 인풋 박스로 정보 바인딩 연동
+                    var replyTriggerHtml = `<span class="comment-reply-trigger" onclick="setupSubCommentInput('${commentAuthorName}')">[답글]</span>`;
 
                     commentItem.innerHTML = `${badgeHtml}<span class="comment-author">${commentAuthorName}</span><span>${comment.content || ''}</span>${actionHtml}${replyTriggerHtml}`;
                     commentListDiv.appendChild(commentItem);
@@ -1037,10 +1125,19 @@
             } catch(e) {}
         }
 
+        // 💬 [대댓글 바인딩 함수] 답글 단추 누를 시 폼 디자인 타겟 연동
         function setupSubCommentInput(targetAuthor) {
             if(myRole === 'GUEST') return;
+            currentSelectedCommentAuthor = targetAuthor;
+
+            var ind = document.getElementById('replyModeIndicator');
+            if(ind) {
+                ind.innerText = `↳ @${targetAuthor} 님에게 답글 남기는 중...`;
+                ind.style.display = 'block';
+            }
+
             var input = document.getElementById('detailReplyInput');
-            if(input) { input.value = `↳ @${targetAuthor} `; input.focus(); }
+            if(input) { input.placeholder = `@${targetAuthor} 님에게 보내는 이야기...`; input.focus(); }
         }
 
         async function deletePost(postId) {
@@ -1066,6 +1163,11 @@
             if (myRole === 'ADMIN') displayAuthor = '관리자';
             else if (currentCategory === '익명게시판') displayAuthor = '익명';
 
+            // 대댓글 모드가 활성화되어 있다면 문두에 화살표 접두사 규칙 자동 가미
+            if(currentSelectedCommentAuthor) {
+                text = `↳ @${currentSelectedCommentAuthor} ${text}`;
+            }
+
             try {
                 const { error } = await supabaseClient
                     .from('reasn_comments')
@@ -1074,6 +1176,13 @@
                 if (error) alert('댓글 등록 실패: ' + error.message);
                 else {
                     if(input) input.value = '';
+                    
+                    // 대댓글 상태 상태 초기화 청소
+                    currentSelectedCommentAuthor = null;
+                    var ind = document.getElementById('replyModeIndicator');
+                    if(ind) ind.style.display = 'none';
+                    if(input) input.placeholder = "댓글을 입력하세요...";
+
                     await reloadCommentsArea(postId);
                     renderDetailSubListSection(); 
                 }
