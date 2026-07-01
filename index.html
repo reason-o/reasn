@@ -2,98 +2,209 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>REASN으로 초대합니다.</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>REASN - 로그인</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 🖤 메인 페이지 모던 블랙앤화이트 테마 */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: Arial, sans-serif; background-color: #fafafa; display: flex; justify-content: center; align-items: center; height: 100vh; color: #111; }
-        .login-container { background: white; padding: 50px 40px; border: 1px solid #e1e1e1; width: 100%; max-width: 400px; text-align: center; }
-        h1 { color: #111; margin-bottom: 35px; font-size: 32px; font-weight: bold; letter-spacing: 1px; }
-        input { width: 100%; padding: 14px; margin-bottom: 15px; border: 1px solid #e1e1e1; font-size: 14px; background-color: #fff; color: #111; }
-        input:focus { outline: 1px solid #111; }
-        button { width: 100%; padding: 14px; background-color: #111; color: white; border: none; font-size: 15px; font-weight: bold; cursor: pointer; margin-bottom: 15px; letter-spacing: 1px; transition: background 0.2s; }
-        button:hover { background-color: #333; }
-        .toggle-link { color: #666; font-size: 13px; cursor: pointer; text-decoration: underline; transition: color 0.2s; }
-        .toggle-link:hover { color: #111; }
+        /* 🖤 극도의 미니멀 화이트 레이아웃 */
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background-color: #ffffff; color: #111; display: flex; flex-direction: column; min-height: 100vh; justify-content: center; align-items: center; padding: 20px; }
+        
+        .login-wrapper { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 30px; text-align: center; }
+        .brand-logo { font-size: 32px; font-weight: bold; letter-spacing: -0.5px; color: #111; cursor: default; }
+        
+        .form-section { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+        .input-field { width: 100%; padding: 14px 16px; border: 1px solid #ddd; font-size: 14px; border-radius: 6px; background: #fff; transition: border-color 0.2s; }
+        .input-field:focus { outline: none; border-color: #111; }
+        
+        .submit-btn { width: 100%; padding: 14px; background-color: #111; color: #fff; border: none; cursor: pointer; font-size: 14px; font-weight: bold; border-radius: 6px; letter-spacing: 0.5px; transition: background 0.2s; margin-top: 5px; }
+        .submit-btn:hover { background-color: #333; }
+        
+        .switch-mode-line { font-size: 13px; color: #666; margin-top: 5px; }
+        .switch-link { color: #111; font-weight: bold; text-decoration: underline; cursor: pointer; margin-left: 5px; }
+        
+        .error-message { color: #ff3b30; font-size: 12px; text-align: left; padding-left: 2px; display: none; word-break: break-all; line-height: 1.4; }
     </style>
 </head>
 <body>
 
-    <div class="login-container">
-        <h1 id="title">reasn</h1>
+    <div class="login-wrapper">
+        <div class="brand-logo">🤫 reasn</div>
         
-        <input type="email" id="email" placeholder="이메일 주소">
-        <input type="text" id="nickname" placeholder="게시판에서 사용할 닉네임" style="display: none;">
-        <input type="password" id="password" placeholder="비밀번호">
-        
-        <button id="mainBtn" onclick="handleAuth()">입장하기</button>
-        <div id="toggleAuth" class="toggle-link" onclick="toggleMode()">신규 회원가입하러 가기</div>
+        <div class="form-section" id="authFormArea">
+            <input type="email" id="authEmail" class="input-field" placeholder="이메일 주소">
+            <input type="password" id="authPassword" class="input-field" placeholder="비밀번호">
+            <div class="error-message" id="authErrorText">오류 메시지 구역</div>
+            <button class="submit-btn" id="authSubmitBtn" onclick="handleAuthAction()">로그인</button>
+            
+            <div class="switch-mode-line" id="toggleModeLine">
+                처음이신가요? <span class="switch-link" onclick="toggleAuthMode(true)">회원가입 하기</span>
+            </div>
+        </div>
     </div>
 
     <script>
-        const SUPABASE_URL = "https://jfsaccbtbvuglvlgagus.supabase.co"; 
-        const SUPABASE_KEY = "sb_publishable_XU8l4rpJsFPlaHj3cny84Q_v53odH1k"; 
-        
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        var supabaseClient = null;
+        var isSignUpMode = false; // false = 로그인, true = 회원가입
 
-        let isSignUpMode = false;
+        window.onload = function() {
+            try {
+                const SUPABASE_URL = "https://jfsaccbtbvuglvlgagus.supabase.co"; 
+                const SUPABASE_KEY = "sb_publishable_XU8l4rpJsFPlaHj3cny84Q_v53odH1k"; 
+                
+                if (typeof supabase !== 'undefined') {
+                    // 1. 영구 세션 보존 활성화
+                    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                        auth: {
+                            persistSession: true,
+                            autoRefreshToken: true
+                        }
+                    });
+                }
+            } catch(subaErr) { console.error(subaErr); }
 
-        function toggleMode() {
-            isSignUpMode = !isSignUpMode;
-            const title = document.getElementById('title');
-            const nicknameInput = document.getElementById('nickname');
-            const mainBtn = document.getElementById('mainBtn');
-            const toggleLink = document.getElementById('toggleAuth');
+            // 2. 0초 만에 로컬 스토리지 검증 후 자동 패스
+            try {
+                if (window.localStorage && localStorage.getItem('reasn_user_email')) {
+                    window.location.href = 'board.html';
+                    return;
+                }
+            } catch(e) { console.log(e); }
+
+            // 3. 수파베이스 영구 쿠키 세션 교차 검증
+            setTimeout(async function() {
+                if (!supabaseClient) return;
+                try {
+                    const { data: dataSession } = await supabaseClient.auth.getSession();
+                    if (dataSession && dataSession.session && dataSession.session.user) {
+                        const user = dataSession.session.user;
+                        
+                        if (window.localStorage) {
+                            localStorage.setItem('reasn_user_name', user.user_metadata.display_name || '회원');
+                            localStorage.setItem('reasn_user_role', user.user_metadata.role || 'USER');
+                            localStorage.setItem('reasn_user_email', user.email || 'unknown');
+                            localStorage.setItem('reasn_user_points', user.user_metadata.points || '0');
+                            if(user.created_at) localStorage.setItem('reasn_user_created', new Date(user.created_at).toLocaleDateString('ko-KR'));
+                        }
+                        window.location.href = 'board.html';
+                    }
+                } catch(e) { console.log(e); }
+            }, 50);
+        };
+
+        function toggleAuthMode(toSignUp) {
+            isSignUpMode = toSignUp;
+            var errBox = document.getElementById('authErrorText');
+            errBox.style.display = 'none';
+            
+            var submitBtn = document.getElementById('authSubmitBtn');
+            var toggleLine = document.getElementById('toggleModeLine');
+            var emailInput = document.getElementById('authEmail');
+            var passwordInput = document.getElementById('authPassword');
+            
+            // 기존 입력값 초기화
+            emailInput.value = '';
+            passwordInput.value = '';
 
             if (isSignUpMode) {
-                title.innerText = "sign up";
-                nicknameInput.style.display = "block";
-                mainBtn.innerText = "가입 완료하기";
-                toggleLink.innerText = "이미 계정이 있으신가요? 로그인하기";
+                submitBtn.innerText = "회원가입 완료";
+                toggleLine.innerHTML = `이미 계정이 있으신가요? <span class="switch-link" onclick="toggleAuthMode(false)">로그인 하기</span>`;
             } else {
-                title.innerText = "reasn";
-                nicknameInput.style.display = "none";
-                mainBtn.innerText = "입장하기";
-                toggleLink.innerText = "신규 회원가입하러 가기";
+                submitBtn.innerText = "로그인";
+                toggleLine.innerHTML = `처음이신가요? <span class="switch-link" onclick="toggleAuthMode(true)">회원가입 하기</span>`;
             }
         }
 
-        async function handleAuth() {
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value.trim();
-            const nickname = document.getElementById('nickname').value.trim();
+        async function handleAuthAction() {
+            if (!supabaseClient) return alert('네트워크 연결이 올바르지 않습니다.');
+            
+            var email = document.getElementById('authEmail').value.trim();
+            var password = document.getElementById('authPassword').value.trim();
+            var errBox = document.getElementById('authErrorText');
+            
+            errBox.style.display = 'none';
 
             if (!email || !password) {
-                return alert('이메일과 비밀번호를 모두 입력해주세요!');
+                errBox.innerText = "이메일과 비밀번호를 모두 입력해 주세요.";
+                errBox.style.display = 'block';
+                return;
             }
 
-            if (isSignUpMode) {
-                if (!nickname) return alert('닉네임을 적어주세요!');
-                
-                const { data, error } = await supabaseClient.auth.signUp({
-                    email: email,
-                    password: password,
-                    options: { data: { display_name: nickname, role: 'USER' } }
-                });
+            var submitBtn = document.getElementById('authSubmitBtn');
+            submitBtn.disabled = true;
+            var originalText = submitBtn.innerText;
+            submitBtn.innerText = isSignUpMode ? "가입 처리 중..." : "인증 확인 중...";
 
-                if (error) alert('회원가입 실패: ' + error.message);
-                else {
-                    alert('가입 완료! 가입하신 정보로 로그인해 주세요.');
-                    toggleMode();
-                }
-            } else {
-                const { data, error } = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
+            try {
+                if (isSignUpMode) {
+                    // 회원가입 처리
+                    var defaultNickname = email.split('@')[0]; // 이메일 앞자리를 기본 닉네임으로 부여
+                    
+                    const { data, error } = await supabaseClient.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: {
+                            data: {
+                                display_name: defaultNickname,
+                                role: 'USER',
+                                points: 0
+                            }
+                        }
+                    });
 
-                if (error) alert('로그인 실패: ' + error.message);
-                else {
-                    const user = data.user;
-                    localStorage.setItem('reasn_user_name', user.user_metadata.display_name);
-                    localStorage.setItem('reasn_user_role', user.user_metadata.role);
-                    window.location.href = 'board.html';
+                    if (error) {
+                        errBox.innerText = "회원가입 실패: " + error.message;
+                        errBox.style.display = 'block';
+                    } else {
+                        alert("🎉 회원가입이 정상적으로 완료되었습니다! 자동으로 로그인 처리됩니다.");
+                        // 가입 직후 세션 자동 획득을 위해 즉시 재로그인 유도 혹은 세션 저장 후 이동
+                        if (data && data.session) {
+                            saveSessionToLocal(data.session.user);
+                            window.location.href = 'board.html';
+                        } else {
+                            toggleAuthMode(false);
+                            errBox.innerText = "가입 완료! 생성하신 비밀번호로 로그인을 진행해 주세요.";
+                            errBox.style.display = 'block';
+                        }
+                    }
+                } else {
+                    // 로그인 처리
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+
+                    if (error) {
+                        errBox.innerText = "로그인 실패: 이메일 또는 비밀번호를 다시 확인하세요.";
+                        errBox.style.display = 'block';
+                    } else {
+                        if (data && data.user) {
+                            saveSessionToLocal(data.user);
+                            window.location.href = 'board.html';
+                        }
+                    }
                 }
+            } catch (e) {
+                errBox.innerText = "오류 발생: 시스템 오류가 발생했습니다.";
+                errBox.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = originalText;
             }
+        }
+
+        function saveSessionToLocal(user) {
+            try {
+                if (window.localStorage && user) {
+                    localStorage.setItem('reasn_user_name', user.user_metadata.display_name || '회원');
+                    localStorage.setItem('reasn_user_role', user.user_metadata.role || 'USER');
+                    localStorage.setItem('reasn_user_email', user.email || 'unknown');
+                    localStorage.setItem('reasn_user_points', user.user_metadata.points !== undefined ? user.user_metadata.points : '0');
+                    if(user.created_at) {
+                        localStorage.setItem('reasn_user_created', new Date(user.created_at).toLocaleDateString('ko-KR'));
+                    }
+                }
+            } catch(e) { console.error(e); }
         }
     </script>
 </body>
