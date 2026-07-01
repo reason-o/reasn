@@ -285,38 +285,52 @@
         var currentPage = 1;
         var postsPerPage = 10;
 
-        window.onload = function() {
-            try {
-                if (window.localStorage && localStorage.getItem('reasn_user_email')) {
-                    myName = localStorage.getItem('reasn_user_name') || '회원';
-                    myRole = localStorage.getItem('reasn_user_role') || 'USER';
-                    myEmail = localStorage.getItem('reasn_user_email') || 'unknown';
-                    myPoints = parseInt(localStorage.getItem('reasn_user_points') || '0');
-                    myCreatedAt = localStorage.getItem('reasn_user_created') || '-';
-                }
-            } catch(e) { console.log(e); }
-
-            updateUserUI();
-            
-            try {
-                const SUPABASE_URL = "https://jfsaccbtbvuglvlgagus.supabase.co"; 
-                const SUPABASE_KEY = "sb_publishable_XU8l4rpJsFPlaHj3cny84Q_v53odH1k"; 
-                if (typeof supabase !== 'undefined') {
-                    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                }
-            } catch(subaErr) { console.error(subaErr); }
-
-            displayPosts();
-            setTimeout(function() { checkSession(); }, 50);
-
-            document.addEventListener('click', function(e) {
-                var card = document.getElementById('myProfileCard');
-                var trigger = document.getElementById('userNicknameBtn');
-                if(card && trigger && !card.contains(e.target) && !trigger.contains(e.target)) {
-                    card.style.display = 'none';
+        /* 📜 이 상자 안의 코드를 복사해서 index.html의 window.onload 자리에 덮어쓰세요 (세로 스크롤 가능) */
+window.onload = function() {
+    try {
+        const SUPABASE_URL = "https://jfsaccbtbvuglvlgagus.supabase.co"; 
+        const SUPABASE_KEY = "sb_publishable_XU8l4rpJsFPlaHj3cny84Q_v53odH1k"; 
+        
+        if (typeof supabase !== 'undefined') {
+            // 1. board.html과 동일하게 영구 세션(persistSession) 및 자동 갱신 엔진을 활성화합니다.
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                auth: {
+                    persistSession: true,
+                    autoRefreshToken: true
                 }
             });
         }
+    } catch(subaErr) { console.error(subaErr); }
+
+    // 2. [핵심 방어선] 브라우저 로컬 저장소에 이미 이메일 정보가 있다면, 서버 통신을 기다리지 않고 즉시 패스!
+    try {
+        if (window.localStorage && localStorage.getItem('reasn_user_email')) {
+            window.location.href = 'board.html';
+            return; // 아래 수파베이스 세션 체크로 넘어가지 않고 즉시 종료
+        }
+    } catch(e) { console.log(e); }
+
+    // 3. 만약 로컬 스토리지가 비어있더라도, 수파베이스 영구 쿠키 세션에 기록이 남아있는지 최종 교차 검증
+    setTimeout(async function() {
+        if (!supabaseClient) return;
+        try {
+            const { data: dataSession } = await supabaseClient.auth.getSession();
+            if (dataSession && dataSession.session && dataSession.session.user) {
+                const user = dataSession.session.user;
+                
+                // 로그인 흔적이 확인되면 로컬 스토리지를 최신화하고 게시판으로 자동 순간이동!
+                if (window.localStorage) {
+                    localStorage.setItem('reasn_user_name', user.user_metadata.display_name || '회원');
+                    localStorage.setItem('reasn_user_role', user.user_metadata.role || 'USER');
+                    localStorage.setItem('reasn_user_email', user.email || 'unknown');
+                    localStorage.setItem('reasn_user_points', user.user_metadata.points || '0');
+                    if(user.created_at) localStorage.setItem('reasn_user_created', new Date(user.created_at).toLocaleDateString('ko-KR'));
+                }
+                window.location.href = 'board.html';
+            }
+        } catch(e) { console.log(e); }
+    }, 50);
+};
 
         async function checkSession() {
             if (!supabaseClient) return;
