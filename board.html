@@ -52,10 +52,8 @@
         .detail-content { font-size: 15px; line-height: 1.7; color: #222; white-space: pre-wrap; word-break: break-all; min-height: 120px; margin-bottom: 25px; }
         .detail-content a { color: #007bff; text-decoration: underline; }
 
-        /* 🖼️ 업로드된 이미지 렌더링 스타일 */
         .uploaded-image-preview { max-width: 100%; max-height: 350px; border-radius: 6px; margin-top: 15px; display: block; object-fit: contain; background: #fafafa; border: 1px solid #eee; }
 
-        /* 📁 파일 선택 및 이미지 업로드 UI 스타일 */
         .file-upload-wrapper { display: flex; flex-direction: column; gap: 6px; background: #f9f9f9; padding: 12px; border: 1px dashed #ddd; border-radius: 6px; font-size: 12px; color: #666; }
         .file-input-btn { font-size: 12px; font-weight: bold; cursor: pointer; color: #111; background: #fff; border: 1px solid #ccc; padding: 6px 12px; border-radius: 4px; display: inline-block; width: max-content; }
         .file-input-btn:hover { background: #f5f5f5; }
@@ -109,13 +107,11 @@
         .move-btn:hover { border-color: #007bff; color: #007bff; }
         .notice-btn:hover { border-color: #111; color: #fff; background-color: #111; }
 
-        /* 💬 댓글 및 대댓글 스타일 디자인 */
         .comment-section { background: #fafafa; padding: 15px; border-radius: 4px; }
         .comment-list { margin-bottom: 10px; }
         .comment-item { font-size: 13px; margin-bottom: 10px; line-height: 1.5; padding-bottom: 8px; border-bottom: 1px solid #f3f3f3; position: relative; }
         .comment-item:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
         
-        /* ↳ 대댓글 디자인 고도화 */
         .comment-item.sub-comment { margin-left: 20px; border-left: 2px solid #ddd; padding-left: 10px; background-color: #f3f3f3; margin-top: 6px; padding-top: 4px; }
         
         .comment-author { font-weight: bold; color: #222; margin-right: 6px; }
@@ -279,65 +275,61 @@
         var currentOpenedPostId = null; 
         var loadedPostImageUrl = null; 
 
-        // 대댓글 제어용 런타임 변수
         var currentSelectedCommentAuthor = null; 
 
         var currentPage = 1;
         var postsPerPage = 10;
 
-        /* 📜 이 상자 안의 코드를 복사해서 index.html의 window.onload 자리에 덮어쓰세요 (세로 스크롤 가능) */
-window.onload = function() {
-    try {
-        const SUPABASE_URL = "https://jfsaccbtbvuglvlgagus.supabase.co"; 
-        const SUPABASE_KEY = "sb_publishable_XU8l4rpJsFPlaHj3cny84Q_v53odH1k"; 
-        
-        if (typeof supabase !== 'undefined') {
-            // 1. board.html과 동일하게 영구 세션(persistSession) 및 자동 갱신 엔진을 활성화합니다.
-            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-                auth: {
-                    persistSession: true,
-                    autoRefreshToken: true
+        window.onload = function() {
+            try {
+                if (window.localStorage && localStorage.getItem('reasn_user_email')) {
+                    myName = localStorage.getItem('reasn_user_name') || '회원';
+                    myRole = localStorage.getItem('reasn_user_role') || 'USER';
+                    myEmail = localStorage.getItem('reasn_user_email') || 'unknown';
+                    myPoints = parseInt(localStorage.getItem('reasn_user_points') || '0');
+                    myCreatedAt = localStorage.getItem('reasn_user_created') || '-';
+                }
+            } catch(e) { console.log(e); }
+
+            updateUserUI();
+            
+            try {
+                const SUPABASE_URL = "https://jfsaccbtbvuglvlgagus.supabase.co"; 
+                const SUPABASE_KEY = "sb_publishable_XU8l4rpJsFPlaH3cny84Q_v53odH1k"; 
+                if (typeof supabase !== 'undefined') {
+                    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                        auth: {
+                            persistSession: true, 
+                            autoRefreshToken: true 
+                        }
+                    });
+                }
+            } catch(subaErr) { console.error(subaErr); }
+
+            displayPosts();
+            setTimeout(function() { checkSession(); }, 50);
+
+            document.addEventListener('click', function(e) {
+                var card = document.getElementById('myProfileCard');
+                var trigger = document.getElementById('userNicknameBtn');
+                if(card && trigger && !card.contains(e.target) && !trigger.contains(e.target)) {
+                    card.style.display = 'none';
                 }
             });
         }
-    } catch(subaErr) { console.error(subaErr); }
-
-    // 2. [핵심 방어선] 브라우저 로컬 저장소에 이미 이메일 정보가 있다면, 서버 통신을 기다리지 않고 즉시 패스!
-    try {
-        if (window.localStorage && localStorage.getItem('reasn_user_email')) {
-            window.location.href = 'board.html';
-            return; // 아래 수파베이스 세션 체크로 넘어가지 않고 즉시 종료
-        }
-    } catch(e) { console.log(e); }
-
-    // 3. 만약 로컬 스토리지가 비어있더라도, 수파베이스 영구 쿠키 세션에 기록이 남아있는지 최종 교차 검증
-    setTimeout(async function() {
-        if (!supabaseClient) return;
-        try {
-            const { data: dataSession } = await supabaseClient.auth.getSession();
-            if (dataSession && dataSession.session && dataSession.session.user) {
-                const user = dataSession.session.user;
-                
-                // 로그인 흔적이 확인되면 로컬 스토리지를 최신화하고 게시판으로 자동 순간이동!
-                if (window.localStorage) {
-                    localStorage.setItem('reasn_user_name', user.user_metadata.display_name || '회원');
-                    localStorage.setItem('reasn_user_role', user.user_metadata.role || 'USER');
-                    localStorage.setItem('reasn_user_email', user.email || 'unknown');
-                    localStorage.setItem('reasn_user_points', user.user_metadata.points || '0');
-                    if(user.created_at) localStorage.setItem('reasn_user_created', new Date(user.created_at).toLocaleDateString('ko-KR'));
-                }
-                window.location.href = 'board.html';
-            }
-        } catch(e) { console.log(e); }
-    }, 50);
-};
 
         async function checkSession() {
             if (!supabaseClient) return;
             try {
                 const { data: dataSession } = await supabaseClient.auth.getSession();
+                
                 if (!dataSession || !dataSession.session) {
-                    myRole = 'GUEST'; myEmail = 'unknown'; updateUserUI(); return;
+                    if(!localStorage.getItem('reasn_user_email')) {
+                        myRole = 'GUEST';
+                        myEmail = 'unknown';
+                        updateUserUI();
+                    }
+                    return;
                 }
 
                 if (dataSession && dataSession.session && dataSession.session.user) {
@@ -358,7 +350,6 @@ window.onload = function() {
                         if (upgradeOrders && upgradeOrders.length > 0) {
                             await supabaseClient.auth.updateUser({ data: { role: 'VIP', points: myPoints } });
                             myRole = 'VIP';
-                            alert('💎 관리자 승인에 의해 VIP 등급으로 등업되었습니다! 다시 접속합니다.');
                         }
                     }
 
@@ -571,7 +562,6 @@ window.onload = function() {
             switchToListView();
         }
 
-        // ✨ [보강 완료된 핵심 저장 함수]
         async function savePost() {
             if (!supabaseClient) return alert('네트워크 연결 확인이 필요합니다.');
             var titleText = document.getElementById('postTitle').value.trim();
@@ -669,7 +659,6 @@ window.onload = function() {
             } catch(e) {
                 alert('처리 중 알 수 없는 런타임 오류가 발생했습니다.');
             } finally {
-                // 🛡️ 무한 로딩 방벽: 에러 유무 상관없이 최종 버튼 복구 보장
                 if(submitBtn) {
                     submitBtn.innerText = "확인";
                     submitBtn.disabled = false;
@@ -789,7 +778,6 @@ window.onload = function() {
                 var numberOrNoticeLabel = post.is_notice === true ? '<i class="notice-label">📌 공지</i>' : `<span class="post-num">${post.local_num}</span>`;
                 var tabularLabel = post.is_hidden === true ? '<span style="color:#ff9500; font-size:12px; font-weight:bold; margin-right:5px;">[숨김보관]</span>' : '';
                 
-                // 📸 이미지 첨부 여부에 따른 리스트 아이콘 표기 분기
                 var hasImgIcon = post.image_url ? ' <span style="font-size:11px; color:#aaa;">📸</span>' : '';
 
                 titleLine.innerHTML = `
@@ -888,7 +876,6 @@ window.onload = function() {
 
                 document.getElementById('detPostContent').innerHTML = convertLinks(post.content);
 
-                // 🖼️ 이미지 출력 렌더러
                 if(post.image_url) {
                     loadedPostImageUrl = post.image_url;
                     document.getElementById('detailImageArea').innerHTML = `<img src="${post.image_url}" class="uploaded-image-preview" alt="첨부 이미지">`;
@@ -1013,7 +1000,6 @@ window.onload = function() {
                         commentAuthorName = `익명${anonymousMap.get(commenterKey)}`;
                     } 
 
-                    // 👑 유저 등급 뱃지 제거 연동 완료 (오직 관리자 뱃지만 노출)
                     let badgeHtml = '';
                     if (commentAuthorName === '관리자' || commentRole === 'ADMIN') {
                         badgeHtml = `<span class="comment-badge" style="color:#ff3b30; font-weight:bold; background:#ffebe6;">관리자</span>`;
@@ -1029,7 +1015,6 @@ window.onload = function() {
                         `;
                     }
 
-                    // 💬 대댓글 트리거 링크 바인딩
                     var replyTriggerHtml = `<span class="comment-reply-trigger" onclick="setupSubCommentInput('${commentAuthorName}')">[답글]</span>`;
 
                     commentItem.innerHTML = `${badgeHtml}<span class="comment-author">${commentAuthorName}</span><span>${comment.content || ''}</span>${actionHtml}${replyTriggerHtml}`;
@@ -1152,7 +1137,6 @@ window.onload = function() {
             } catch(e) {}
         }
 
-        // 💬 대댓글 모드 UI 상태 관리 전환 함수
         function setupSubCommentInput(targetAuthor) {
             if(myRole === 'GUEST') return;
             currentSelectedCommentAuthor = targetAuthor;
@@ -1190,7 +1174,6 @@ window.onload = function() {
             if (myRole === 'ADMIN') displayAuthor = '관리자';
             else if (currentCategory === '익명게시판') displayAuthor = '익명';
 
-            // 대댓글 조건 충족 시 접두사 추가
             if(currentSelectedCommentAuthor) {
                 text = `↳ @${currentSelectedCommentAuthor} ${text}`;
             }
@@ -1204,7 +1187,6 @@ window.onload = function() {
                 else {
                     if(input) input.value = '';
                     
-                    // 대댓글 모드 초기화
                     currentSelectedCommentAuthor = null;
                     var ind = document.getElementById('replyModeIndicator');
                     if(ind) ind.style.display = 'none';
