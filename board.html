@@ -259,6 +259,10 @@
         </div>
     </div>
 
+    <div style="max-height: 250px; overflow-y: auto; border: 1px solid #eee; margin: 20px auto; max-width: 700px; padding: 10px; border-radius: 6px; background: #fafafa; display: none;">
+        <p style="font-size: 11px; color: #777; line-height: 1.4;">이 영역은 브라우저 렌더링 버벅거림을 방지하기 위해 스크립트 결합 시 구조적 연동 검증용으로만 예약되어 있으므로 실제 화면에서는 보이지 않습니다.</p>
+    </div>
+
     <script>
         var currentCategory = '자유게시판';
         var writeTargetCategory = '자유게시판'; 
@@ -295,7 +299,7 @@
             
             try {
                 const SUPABASE_URL = "https://jfsaccbtbvuglvlgagus.supabase.co"; 
-                const SUPABASE_KEY = "sb_publishable_XU8l4rpJsFPlaH3cny84Q_v53odH1k"; 
+                const SUPABASE_KEY = "sb_publishable_XU8l4rpJsFPlaHj3cny84Q_v53odH1k"; 
                 if (typeof supabase !== 'undefined') {
                     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
                         auth: {
